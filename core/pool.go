@@ -21,7 +21,7 @@ func GetInstance(config Config, logger *zap.Logger) (*Instance, error) {
 
 	if instance == nil {
 		// Initialize a new instance.
-		state, pendingElems, blocklistElems, err := NewInstanceState(config.MaxMemUsage, config.MaxMemUsage)
+		state, pendingElems, blocklistElems, err := NewInstanceState(config.MaxMemUsage, config.MaxMemUsage, config.PendingTTL, config.BlockTTL)
 		if err != nil {
 			return nil, err
 		}

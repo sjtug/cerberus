@@ -22,11 +22,12 @@ func (i *Instance) UpdateWithConfig(c Config, logger *zap.Logger) error {
 	} else {
 		// We need to reset the state.
 		logger.Info("existing cerberus instance with incompatible config found, resetting state")
-		state, pendingElems, blocklistElems, err := NewInstanceState(c.MaxMemUsage, c.MaxMemUsage)
+		state, pendingElems, blocklistElems, err := NewInstanceState(c.MaxMemUsage, c.MaxMemUsage, c.PendingTTL, c.BlockTTL)
 		if err != nil {
 			return err
 		}
 		i.Config = c
+		i.InstanceState.Close() // Close the old state
 		i.InstanceState = state
 		logger.Info("cerberus state initialized",
 			zap.Int64("pending_elems", pendingElems),

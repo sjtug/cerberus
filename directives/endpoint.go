@@ -98,10 +98,7 @@ func (e *Endpoint) answerHandle(w http.ResponseWriter, r *http.Request) error {
 	ipBlockRaw := caddyhttp.GetVar(r.Context(), core.VarName)
 	if ipBlockRaw != nil {
 		ipBlock := ipBlockRaw.(ipblock.IPBlock)
-		counter, ok := c.GetPending().Get(ipBlock.ToUint64())
-		if ok {
-			counter.Add(-1)
-		}
+		c.DecPending(ipBlock)
 	}
 
 	http.Redirect(w, r, redir, http.StatusSeeOther)

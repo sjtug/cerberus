@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"sync/atomic"
 
 	"github.com/a-h/templ"
 	"github.com/caddyserver/caddy/v2"
@@ -45,24 +44,17 @@ func (m *Middleware) invokeAuth(w http.ResponseWriter, r *http.Request) error {
 	if ipBlockRaw != nil {
 		ipBlock := ipBlockRaw.(ipblock.IPBlock)
 
-		counter, ok := c.GetPending().Get(ipBlock.ToUint64())
-		if ok {
-			if counter.Load() > c.MaxPending {
-				m.logger.Info(
-					"Max failed/active challenges reached for IP block, rejecting",
-					zap.String("ip", ipBlock.ToIPNet(c.PrefixCfg).String()),
-				)
-				c.GetBlocklist().SetWithTTL(ipBlock.ToUint64(), struct{}{}, 0, c.BlockTTL)
+		count := c.IncPending(ipBlock)
+		if count > c.MaxPending {
+			m.logger.Info(
+				"Max failed/active challenges reached for IP block, rejecting",
+				zap.String("ip", ipBlock.ToIPNet(c.PrefixCfg).String()),
+			)
+			c.InsertBlocklist(ipBlock)
+			c.RemovePending(ipBlock)
 
-				respondFailure(w, r, &c.Config, "IP blocked", true, http.StatusForbidden, m.BaseURL)
-				return nil
-			}
-
-			counter.Add(1)
-		} else {
-			counter := new(atomic.Int32)
-			counter.Store(1)
-			c.GetPending().SetWithTTL(ipBlock.ToUint64(), counter, core.PendingItemCost, c.PendingTTL)
+			respondFailure(w, r, &c.Config, "IP blocked", true, http.StatusForbidden, m.BaseURL)
+			return nil
 		}
 	}
 
@@ -136,7 +128,7 @@ func (m *Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next cadd
 
 	if ipBlock, err := ipblock.NewIPBlock(net.ParseIP(getClientIP(r)), c.PrefixCfg); err == nil {
 		caddyhttp.SetVar(r.Context(), core.VarName, ipBlock)
-		if _, ok := c.GetBlocklist().Get(ipBlock.ToUint64()); ok {
+		if c.ContainsBlocklist(ipBlock) {
 			m.logger.Debug("IP is blocked", zap.String("ip", ipBlock.ToIPNet(c.PrefixCfg).String()))
 			respondFailure(w, r, &c.Config, "IP blocked", true, http.StatusForbidden, m.BaseURL)
 			return nil
