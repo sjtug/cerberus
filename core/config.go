@@ -34,6 +34,10 @@ type Config struct {
 	BlockTTL time.Duration `json:"block_ttl,omitempty"`
 	// PendingTTL is the time to live for pending requests when considering whether to block an IP.
 	PendingTTL time.Duration `json:"pending_ttl,omitempty"`
+	// AccessPerApproval is the number of requests allowed per successful challenge.
+	AccessPerApproval int32 `json:"access_per_approval,omitempty"`
+	// ApprovalTTL is the time to live for approved requests.
+	ApprovalTTL time.Duration `json:"approval_ttl,omitempty"`
 	// MaxMemUsage is the maximum memory usage for the pending and blocklist caches.
 	MaxMemUsage int64 `json:"max_mem_usage,omitempty"`
 	// CookieName is the name of the cookie used to store signed certificate.

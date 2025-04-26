@@ -9,11 +9,13 @@ import (
 )
 
 func newTestState(t *testing.T) *InstanceState {
-	state, _, _, err := NewInstanceState(
+	state, _, _, _, err := NewInstanceState(
 		1<<20,     // 1MB for pending
 		1<<20,     // 1MB for blocklist
+		1<<20,     // 1MB for approved
 		time.Hour, // 1 hour TTL for pending
 		time.Hour, // 1 hour TTL for blocklist
+		time.Hour, // 1 hour TTL for approved
 	)
 	if err != nil {
 		t.Fatalf("failed to create instance state: %v", err)

@@ -22,7 +22,7 @@ func (i *Instance) UpdateWithConfig(c Config, logger *zap.Logger) error {
 	} else {
 		// We need to reset the state.
 		logger.Info("existing cerberus instance with incompatible config found, resetting state")
-		state, pendingElems, blocklistElems, err := NewInstanceState(c.MaxMemUsage, c.MaxMemUsage, c.PendingTTL, c.BlockTTL)
+		state, pendingElems, blocklistElems, approvalElems, err := NewInstanceState(c.MaxMemUsage, c.MaxMemUsage, c.MaxMemUsage, c.PendingTTL, c.BlockTTL, c.ApprovalTTL)
 		if err != nil {
 			return err
 		}
@@ -32,6 +32,7 @@ func (i *Instance) UpdateWithConfig(c Config, logger *zap.Logger) error {
 		logger.Info("cerberus state initialized",
 			zap.Int64("pending_elems", pendingElems),
 			zap.Int64("blocklist_elems", blocklistElems),
+			zap.Int64("approval_elems", approvalElems),
 		)
 	}
 	return nil

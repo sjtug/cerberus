@@ -37,6 +37,15 @@ func (c *App) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 				return d.Errf("max_pending must be an integer")
 			}
 			c.MaxPending = int32(maxPending) // #nosec G115 -- trusted input
+		case "access_per_approval":
+			if !d.NextArg() {
+				return d.ArgErr()
+			}
+			accessPerApproval, ok := d.ScalarVal().(int)
+			if !ok {
+				return d.Errf("access_per_approval must be an integer")
+			}
+			c.AccessPerApproval = int32(accessPerApproval) // #nosec G115 -- trusted input
 		case "block_ttl":
 			if !d.NextArg() {
 				return d.ArgErr()
@@ -63,6 +72,19 @@ func (c *App) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 				return d.Errf("pending_ttl must be a valid duration: %v", err)
 			}
 			c.PendingTTL = pendingTTL
+		case "approval_ttl":
+			if !d.NextArg() {
+				return d.ArgErr()
+			}
+			approvalTTLRaw, ok := d.ScalarVal().(string)
+			if !ok {
+				return d.Errf("approval_ttl must be a string")
+			}
+			approvalTTL, err := time.ParseDuration(approvalTTLRaw)
+			if err != nil {
+				return d.Errf("approval_ttl must be a valid duration: %v", err)
+			}
+			c.ApprovalTTL = approvalTTL
 		case "max_mem_usage":
 			if !d.NextArg() {
 				return d.ArgErr()
