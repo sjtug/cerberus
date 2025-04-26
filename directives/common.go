@@ -13,7 +13,10 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/sjtug/cerberus/core"
 	"github.com/sjtug/cerberus/web"
+	"github.com/zeebo/blake3"
 )
+
+const IV = "/L4y6KgWa8vHEujU3O6JyI8osQxwh1nE0Eoay4nD3vw/y36eSFT0s/GTGfrngN6+"
 
 func clearCookie(w http.ResponseWriter, cookieName string) {
 	http.SetCookie(w, &http.Cookie{
@@ -69,19 +72,28 @@ func sha256sum(text string) (string, error) {
 	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
+func blake3sum(text string) (string, error) {
+	hash := blake3.New()
+	_, err := hash.WriteString(text)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(hash.Sum(nil)), nil
+}
+
 func challengeFor(r *http.Request, c *core.Instance) (string, error) {
 	fp := c.GetFingerprint()
 
-	payload := fmt.Sprintf("Accept-Language=%s,X-Real-IP=%s,User-Agent=%s,WeekTime=%s,Fingerprint=%s,Difficulty=%d",
+	payload := fmt.Sprintf("Accept-Language=%s,X-Real-IP=%s,User-Agent=%s,Fingerprint=%s,Difficulty=%d,IV=%s",
 		r.Header.Get("Accept-Language"),
 		getClientIP(r),
 		r.Header.Get("User-Agent"),
-		time.Now().UTC().Round(24*7*time.Hour).Format(time.RFC3339),
 		fp,
 		c.Difficulty,
+		IV,
 	)
 
-	return sha256sum(payload)
+	return blake3sum(payload)
 }
 
 func respondFailure(w http.ResponseWriter, r *http.Request, c *core.Config, msg string, blocked bool, status int, baseURL string) {

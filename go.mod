@@ -57,7 +57,7 @@ require (
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/cel-go v0.25.0 // indirect
 	github.com/google/pprof v0.0.0-20250423184734-337e5dd93bb4 // indirect
-	github.com/google/uuid v1.6.0 // indirect
+	github.com/google/uuid v1.6.0
 	github.com/huandu/xstrings v1.5.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -105,7 +105,7 @@ require (
 	github.com/stoewer/go-strcase v1.3.0 // indirect
 	github.com/tailscale/tscert v0.0.0-20240608151842-d3f834017e53 // indirect
 	github.com/urfave/cli v1.22.16 // indirect
-	github.com/zeebo/blake3 v0.2.4 // indirect
+	github.com/zeebo/blake3 v0.2.4
 	go.etcd.io/bbolt v1.4.0 // indirect
 	go.step.sm/crypto v0.61.0 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
