@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	mrand "math/rand"
 	"net/http"
 	"time"
 
@@ -68,10 +67,6 @@ func sha256sum(text string) (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(hash.Sum(nil)), nil
-}
-
-func randomJitter() bool {
-	return mrand.Intn(100) > 10 // #nosec G404 -- we are okay with non-cryptographic randomness here
 }
 
 func challengeFor(r *http.Request, c *core.Instance) (string, error) {

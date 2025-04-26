@@ -12,10 +12,14 @@
 		# MaxPending is the maximum number of pending (and failed) requests.
 		# Any IP block (prefix configured in prefix_cfg) with more than this number of pending requests will be blocked.
 		max_pending 128
+		# AccessPerApproval is the number of requests allowed per successful challenge. We recommend a value greater than 8 to support parallel and resumable downloads.
+		access_per_approval 8
 		# BlockTTL is the time to live for blocked IPs.
 		block_ttl "24h"
 		# PendingTTL is the time to live for pending requests when considering whether to block an IP.
 		pending_ttl "1h"
+		# ApprovalTTL is the time to live for approved requests.
+		approval_ttl "1h"
 		# MaxMemUsage is the maximum memory usage for the pending and blocklist caches.
 		max_mem_usage "512MiB"
 		# CookieName is the name of the cookie used to store signed certificate.

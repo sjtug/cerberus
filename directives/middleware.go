@@ -2,7 +2,6 @@ package directives
 
 import (
 	"context"
-	"crypto/subtle"
 	"errors"
 	"fmt"
 	"net"
@@ -12,6 +11,7 @@ import (
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/sjtug/cerberus/core"
 	"github.com/sjtug/cerberus/internal/ipblock"
 	"github.com/sjtug/cerberus/web"
@@ -77,52 +77,6 @@ func (m *Middleware) invokeAuth(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (m *Middleware) secondaryScreen(r *http.Request, token *jwt.Token) (bool, error) {
-	c := m.instance
-
-	claims := token.Claims.(jwt.MapClaims)
-
-	challenge, ok := claims["challenge"].(string)
-	if !ok {
-		m.logger.Info("token does not contain valid challenge claim")
-		return false, nil
-	}
-
-	expected, err := challengeFor(r, c)
-	if err != nil {
-		m.logger.Error("failed to calculate challenge", zap.Error(err))
-		return false, err
-	}
-
-	if challenge != expected {
-		m.logger.Info("challenge mismatch", zap.String("expected", expected), zap.String("actual", challenge))
-		return false, nil
-	}
-
-	var nonce int
-	if v, ok := claims["nonce"].(float64); ok {
-		nonce = int(v)
-	}
-
-	response, ok := claims["response"].(string)
-	if !ok {
-		m.logger.Info("token does not contain valid response claim")
-		return false, nil
-	}
-
-	answer, err := sha256sum(fmt.Sprintf("%s%d", challenge, nonce))
-	if err != nil {
-		m.logger.Error("failed to calculate answer", zap.Error(err))
-		return false, err
-	}
-	if subtle.ConstantTimeCompare([]byte(answer), []byte(response)) != 1 {
-		m.logger.Debug("response mismatch", zap.String("expected", answer), zap.String("actual", response))
-		return false, nil
-	}
-
-	return true, nil
-}
-
 func (m *Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
 	c := m.instance
 
@@ -159,29 +113,48 @@ func (m *Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next cadd
 		return m.invokeAuth(w, r)
 	}
 
-	// Now we know the user passed the challenge previously and thus we signed the result.
-	// However, for security reasons we randomly decide to revalidate the challenge.
-	if randomJitter() {
-		// OK: Continue to the next handler
-		w.Header().Set(c.HeaderName, "PASS-BRIEF")
-		return next.ServeHTTP(w, r)
+	// Metadata structure correct. Now we need to check the approval.
+	claims := token.Claims.(jwt.MapClaims)
+
+	// First we check approval state.
+	approvalIDRaw, ok := claims["approval_id"].(string)
+	if !ok {
+		m.logger.Debug("token does not contain valid approval_id claim")
+		return m.invokeAuth(w, r)
 	}
 
-	m.logger.Debug("selected for second challenge")
-	ok, err := m.secondaryScreen(r, token)
+	approvalID, err := uuid.Parse(approvalIDRaw)
 	if err != nil {
-		m.logger.Error("internal error during secondary screening", zap.Error(err))
+		m.logger.Debug("invalid approval_id", zap.String("approval_id", approvalIDRaw), zap.Error(err))
+		return m.invokeAuth(w, r)
+	}
+
+	approved := c.DecApproval(approvalID)
+	if !approved {
+		m.logger.Debug("approval not found", zap.String("approval_id", approvalIDRaw))
+		return m.invokeAuth(w, r)
+	}
+
+	// Then we check user fingerprint matches the challenge to prevent cookie reuse.
+	challenge, ok := claims["challenge"].(string)
+	if !ok {
+		m.logger.Debug("token does not contain valid challenge claim")
+		return m.invokeAuth(w, r)
+	}
+
+	expected, err := challengeFor(r, c)
+	if err != nil {
+		m.logger.Error("failed to calculate challenge", zap.Error(err))
 		return err
 	}
 
-	if !ok {
-		// OOPS: SSSS failed!
-		m.logger.Warn("secondary screening failed: potential ill-behaved client")
+	if challenge != expected {
+		m.logger.Debug("challenge mismatch", zap.String("expected", expected), zap.String("actual", challenge))
 		return m.invokeAuth(w, r)
 	}
 
 	// OK: Continue to the next handler
-	w.Header().Set(c.HeaderName, "PASS-FULL")
+	w.Header().Set(c.HeaderName, "PASS")
 	return next.ServeHTTP(w, r)
 }
 

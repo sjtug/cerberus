@@ -70,14 +70,15 @@ func (e *Endpoint) answerHandle(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	// Now we know the user passed the challenge, we sign the result.
+	// Now we know the user passed the challenge, we issue an approval and sign the result.
+	approvalID := c.IssueApproval(c.AccessPerApproval)
 	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, jwt.MapClaims{
-		"challenge": challenge,
-		"nonce":     nonce,
-		"response":  response,
-		"iat":       time.Now().Unix(),
-		"nbf":       time.Now().Add(-time.Minute).Unix(),
-		"exp":       time.Now().Add(24 * 7 * time.Hour).Unix(),
+		"challenge":   challenge,
+		"response":    response,
+		"approval_id": approvalID,
+		"iat":         time.Now().Unix(),
+		"nbf":         time.Now().Add(-time.Minute).Unix(),
+		"exp":         time.Now().Add(c.ApprovalTTL).Unix(),
 	})
 	tokenStr, err := token.SignedString(c.GetPrivateKey())
 	if err != nil {
@@ -88,7 +89,7 @@ func (e *Endpoint) answerHandle(w http.ResponseWriter, r *http.Request) error {
 	http.SetCookie(w, &http.Cookie{
 		Name:     c.CookieName,
 		Value:    tokenStr,
-		Expires:  time.Now().Add(24 * 7 * time.Hour),
+		Expires:  time.Now().Add(c.ApprovalTTL),
 		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
 	})

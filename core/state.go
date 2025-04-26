@@ -208,7 +208,7 @@ func (s *InstanceState) DecApproval(id uuid.UUID) bool {
 	counter, ok := s.approval.Get(id)
 	if ok {
 		count := counter.Add(-1)
-		if count <= 0 {
+		if count < 0 {
 			s.approval.Remove(id)
 			return false
 		}
