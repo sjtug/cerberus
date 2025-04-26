@@ -33,11 +33,55 @@ func (e *Endpoint) answerHandle(w http.ResponseWriter, r *http.Request) error {
 		respondFailure(w, r, &c.Config, "nonce is empty", false, http.StatusBadRequest, ".")
 		return nil
 	}
-
-	nonce, err := strconv.Atoi(nonceStr)
+	nonce64, err := strconv.ParseUint(nonceStr, 10, 32)
 	if err != nil {
-		e.logger.Debug("nonce is not a integer", zap.Error(err))
-		respondFailure(w, r, &c.Config, "nonce is not a integer", false, http.StatusBadRequest, ".")
+		e.logger.Debug("nonce is not an integer", zap.Error(err))
+		respondFailure(w, r, &c.Config, "nonce is not an integer", false, http.StatusBadRequest, ".")
+		return nil
+	}
+	nonce := uint32(nonce64)
+	if !c.InsertUsedNonce(nonce) {
+		e.logger.Info("nonce already used")
+		respondFailure(w, r, &c.Config, "nonce already used", false, http.StatusBadRequest, ".")
+		return nil
+	}
+
+	tsStr := r.FormValue("ts")
+	if tsStr == "" {
+		e.logger.Info("ts is empty")
+		respondFailure(w, r, &c.Config, "ts is empty", false, http.StatusBadRequest, ".")
+		return nil
+	}
+	ts, err := strconv.ParseInt(tsStr, 10, 64)
+	if err != nil {
+		e.logger.Debug("ts is not a integer", zap.Error(err))
+		respondFailure(w, r, &c.Config, "ts is not a integer", false, http.StatusBadRequest, ".")
+		return nil
+	}
+	now := time.Now().Unix()
+	if ts < now-int64(core.NonceTTL) || ts > now {
+		e.logger.Info("invalid ts", zap.Int64("ts", ts), zap.Int64("now", now))
+		respondFailure(w, r, &c.Config, "invalid ts", false, http.StatusBadRequest, ".")
+		return nil
+	}
+
+	signature := r.FormValue("signature")
+	if signature == "" {
+		e.logger.Info("signature is empty")
+		respondFailure(w, r, &c.Config, "signature is empty", false, http.StatusBadRequest, ".")
+		return nil
+	}
+
+	solutionStr := r.FormValue("solution")
+	if solutionStr == "" {
+		e.logger.Info("solution is empty")
+		respondFailure(w, r, &c.Config, "solution is empty", false, http.StatusBadRequest, ".")
+		return nil
+	}
+	solution, err := strconv.Atoi(solutionStr)
+	if err != nil {
+		e.logger.Debug("solution is not a integer", zap.Error(err))
+		respondFailure(w, r, &c.Config, "solution is not a integer", false, http.StatusBadRequest, ".")
 		return nil
 	}
 
@@ -50,7 +94,14 @@ func (e *Endpoint) answerHandle(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	answer, err := sha256sum(fmt.Sprintf("%s%d", challenge, nonce))
+	expectedSignature := calcSignature(challenge, nonce, ts, c)
+	if signature != expectedSignature {
+		e.logger.Debug("signature mismatch", zap.String("expected", expectedSignature), zap.String("actual", signature))
+		respondFailure(w, r, &c.Config, "signature mismatch", false, http.StatusForbidden, ".")
+		return nil
+	}
+
+	answer, err := sha256sum(fmt.Sprintf("%s|%d|%d|%s%d", challenge, nonce, ts, signature, solution))
 	if err != nil {
 		e.logger.Error("failed to calculate answer", zap.Error(err))
 		return err

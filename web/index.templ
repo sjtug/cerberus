@@ -45,7 +45,7 @@ templ Base(title string) {
 	</html>
 }
 
-templ Challenge(challenge string, difficulty int) {
+templ Challenge(challenge string, difficulty int, nonce uint32, ts int64, signature string) {
 	<img id="mascot" src={ GetBaseURL(ctx) + "/static/img/mascot-puzzle.png?v=" + GetVersion(ctx) } alt="Cute anime mascot character" class="mx-auto mb-6 p-6"/>
 	<div id="status-container">
 		<p id="status" class="text-gray-700 mb-2">status</p>
@@ -83,6 +83,9 @@ templ Challenge(challenge string, difficulty int) {
 	</noscript>
 	@templ.JSONScript("challenge", challenge)
 	@templ.JSONScript("difficulty", difficulty)
+	@templ.JSONScript("nonce", nonce)
+	@templ.JSONScript("ts", ts)
+	@templ.JSONScript("signature", signature)
 	@templ.JSONScript("baseURL", GetBaseURL(ctx))
 	@templ.JSONScript("version", GetVersion(ctx))
 	<script async type="module" src={ GetBaseURL(ctx) + "/static/main.mjs" }></script>

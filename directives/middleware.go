@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/a-h/templ"
 	"github.com/caddyserver/caddy/v2"
@@ -14,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/sjtug/cerberus/core"
 	"github.com/sjtug/cerberus/internal/ipblock"
+	"github.com/sjtug/cerberus/internal/randpool"
 	"github.com/sjtug/cerberus/web"
 	"go.uber.org/zap"
 )
@@ -66,9 +68,13 @@ func (m *Middleware) invokeAuth(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
+	nonce := randpool.ReadUint32()
+	ts := time.Now().Unix()
+	signature := calcSignature(challenge, nonce, ts, c)
+
 	ctx := templ.WithChildren(
 		context.WithValue(context.WithValue(r.Context(), web.BaseURLCtxKey, m.BaseURL), web.VersionCtxKey, core.Version),
-		web.Challenge(challenge, c.Difficulty),
+		web.Challenge(challenge, c.Difficulty, nonce, ts, signature),
 	)
 	templ.Handler(
 		web.Base(c.Title),

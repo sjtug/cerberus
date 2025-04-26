@@ -6,10 +6,12 @@ import (
 	"unsafe"
 
 	"crypto/sha256"
+	"encoding/binary"
 	"encoding/hex"
 
 	"github.com/elastic/go-freelru"
 	"github.com/google/uuid"
+	"github.com/sjtug/cerberus/internal/expiremap"
 	"github.com/sjtug/cerberus/internal/ipblock"
 	"github.com/zeebo/xxh3"
 	"golang.org/x/crypto/ed25519"
@@ -26,14 +28,7 @@ func hashIPBlock(ip ipblock.IPBlock) uint32 {
 	data := ip.ToUint64()
 
 	var buf [8]byte
-	buf[0] = byte(data >> 56)
-	buf[1] = byte(data >> 48)
-	buf[2] = byte(data >> 40)
-	buf[3] = byte(data >> 32)
-	buf[4] = byte(data >> 24)
-	buf[5] = byte(data >> 16)
-	buf[6] = byte(data >> 8)
-	buf[7] = byte(data)
+	binary.BigEndian.PutUint64(buf[:], data)
 
 	hash := xxh3.Hash(buf[:])
 	return uint32(hash) // #nosec G115 -- expected truncation
@@ -51,6 +46,7 @@ type InstanceState struct {
 	pending   freelru.Cache[ipblock.IPBlock, *atomic.Int32]
 	blocklist freelru.Cache[ipblock.IPBlock, struct{}]
 	approval  freelru.Cache[uuid.UUID, *atomic.Int32]
+	usedNonce *expiremap.ExpireMap[uint32, struct{}]
 	stop      chan struct{}
 }
 
@@ -80,6 +76,24 @@ func initLRU[K comparable, V any](
 	}()
 
 	return cache, nil
+}
+
+// initUsedNonce creates and initializes an ExpireMap for tracking used nonces
+func initUsedNonce(stop chan struct{}, purgeInterval time.Duration) *expiremap.ExpireMap[uint32, struct{}] {
+	usedNonce := expiremap.NewExpireMap[uint32, struct{}](func(x uint32) uint32 {
+		return x
+	})
+	go func() {
+		for {
+			select {
+			case <-stop:
+				return
+			case <-time.After(purgeInterval):
+				usedNonce.PurgeExpired()
+			}
+		}
+	}()
+	return usedNonce
 }
 
 func NewInstanceState(pendingMaxMemUsage int64, blocklistMaxMemUsage int64, approvedMaxMemUsage int64, pendingTTL time.Duration, blocklistTTL time.Duration, approvalTTL time.Duration) (*InstanceState, int64, int64, int64, error) {
@@ -123,6 +137,8 @@ func NewInstanceState(pendingMaxMemUsage int64, blocklistMaxMemUsage int64, appr
 		return nil, 0, 0, 0, err
 	}
 
+	usedNonce := initUsedNonce(stop, 41*time.Second)
+
 	pub, priv, err := ed25519.GenerateKey(nil)
 	if err != nil {
 		return nil, 0, 0, 0, err
@@ -137,6 +153,7 @@ func NewInstanceState(pendingMaxMemUsage int64, blocklistMaxMemUsage int64, appr
 		pending:   pending,
 		blocklist: blocklist,
 		approval:  approval,
+		usedNonce: usedNonce,
 		stop:      stop,
 	}, int64(pendingElems), int64(blocklistElems), int64(approvalElems), nil
 }
@@ -215,6 +232,12 @@ func (s *InstanceState) DecApproval(id uuid.UUID) bool {
 		return true
 	}
 	return false
+}
+
+// InsertUsedNonce inserts a nonce into the usedNonce map.
+// Returns true if the nonce was inserted, false if it was already present.
+func (s *InstanceState) InsertUsedNonce(nonce uint32) bool {
+	return s.usedNonce.SetIfAbsent(nonce, struct{}{}, NonceTTL)
 }
 
 func (s *InstanceState) Close() {

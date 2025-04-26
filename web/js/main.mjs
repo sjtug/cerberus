@@ -5,7 +5,7 @@ import pow from "./proof-of-work.mjs";
 class VerificationUI {
   static state = {
     baseURL: '',
-    version: '1.0.0'
+    version: 'unknown'
   };
 
   static elements = {
@@ -82,8 +82,7 @@ class VerificationUI {
   }
 }
 
-function createAnswerForm(hash, nonce, baseURL) {
-  console.log("post url", `${baseURL}/answer`);
+function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
   const form = document.createElement('form');
   form.method = 'POST';
   form.action = `${baseURL}/answer`;
@@ -93,19 +92,36 @@ function createAnswerForm(hash, nonce, baseURL) {
   responseInput.name = 'response';
   responseInput.value = hash;
 
+  const solutionInput = document.createElement('input');
+  solutionInput.type = 'hidden';
+  solutionInput.name = 'solution';
+  solutionInput.value = solution;
+
   const nonceInput = document.createElement('input');
   nonceInput.type = 'hidden';
   nonceInput.name = 'nonce';
   nonceInput.value = nonce;
 
+  const tsInput = document.createElement('input');
+  tsInput.type = 'hidden';
+  tsInput.name = 'ts';
+  tsInput.value = ts;
+
+  const signatureInput = document.createElement('input');
+  signatureInput.type = 'hidden';
+  signatureInput.name = 'signature';
+  signatureInput.value = signature;
+
   const redirInput = document.createElement('input');
   redirInput.type = 'hidden';
   redirInput.name = 'redir';
   redirInput.value = window.location.href;
-  console.log("redir value", redirInput.value);
 
   form.appendChild(responseInput);
+  form.appendChild(solutionInput);
   form.appendChild(nonceInput);
+  form.appendChild(tsInput);
+  form.appendChild(signatureInput);
   form.appendChild(redirInput);
   document.body.appendChild(form);
 
@@ -121,6 +137,9 @@ function createAnswerForm(hash, nonce, baseURL) {
   const difficulty = JSON.parse(document.getElementById('difficulty').textContent);
   const baseURL = JSON.parse(document.getElementById('baseURL').textContent);
   const version = JSON.parse(document.getElementById('version').textContent);
+  const inputNonce = JSON.parse(document.getElementById('nonce').textContent);
+  const ts = JSON.parse(document.getElementById('ts').textContent);
+  const signature = JSON.parse(document.getElementById('signature').textContent);
 
   // Initialize VerificationUI with configuration
   VerificationUI.initialize({
@@ -139,7 +158,8 @@ function createAnswerForm(hash, nonce, baseURL) {
 
   const likelihood = Math.pow(16, -difficulty);
 
-  const { hash, nonce } = await pow(challenge, difficulty, null, (iters) => {
+  const mergedChallenge = `${challenge}|${inputNonce}|${ts}|${signature}`;
+  const { hash, nonce: solution } = await pow(mergedChallenge, difficulty, null, (iters) => {
     // the probability of still being on the page is (1 - likelihood) ^ iters.
     // by definition, half of the time the progress bar only gets to half, so
     // apply a polynomial ease-out function to move faster in the beginning
@@ -166,15 +186,15 @@ function createAnswerForm(hash, nonce, baseURL) {
   });
 
   const t1 = Date.now();
-  console.log({ hash, nonce });
+  console.log({ hash, solution });
 
   // Show success state
   VerificationUI.setState('success', {
     status: 'Verification Complete!',
-    metrics: `Took ${t1 - t0}ms, ${nonce} iterations`
+    metrics: `Took ${t1 - t0}ms, ${solution} iterations`
   });
 
-  const form = createAnswerForm(hash, nonce, baseURL);
+  const form = createAnswerForm(hash, solution, baseURL, inputNonce, ts, signature);
   setTimeout(() => {
     form.submit();
   }, 250);

@@ -2,6 +2,7 @@ package directives
 
 import (
 	"context"
+	"crypto/ed25519"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -16,7 +17,10 @@ import (
 	"github.com/zeebo/blake3"
 )
 
-const IV = "/L4y6KgWa8vHEujU3O6JyI8osQxwh1nE0Eoay4nD3vw/y36eSFT0s/GTGfrngN6+"
+const (
+	IV1 = "/L4y6KgWa8vHEujU3O6JyI8osQxwh1nE0Eoay4nD3vw/y36eSFT0s/GTGfrngN6+"
+	IV2 = "KHo5hHR3ZfisR7xeG1gJwO3LSc1cYyDUQ5+StoAjV8jLhp01NBNi4joHYTWXDqF0"
+)
 
 func clearCookie(w http.ResponseWriter, cookieName string) {
 	http.SetCookie(w, &http.Cookie{
@@ -90,10 +94,17 @@ func challengeFor(r *http.Request, c *core.Instance) (string, error) {
 		r.Header.Get("User-Agent"),
 		fp,
 		c.Difficulty,
-		IV,
+		IV1,
 	)
 
 	return blake3sum(payload)
+}
+
+func calcSignature(challenge string, nonce uint32, ts int64, c *core.Instance) string {
+	payload := fmt.Sprintf("Challenge=%s,Nonce=%d,TS=%d,IV=%s", challenge, nonce, ts, IV2)
+
+	signature := ed25519.Sign(c.GetPrivateKey(), []byte(payload))
+	return hex.EncodeToString(signature)
 }
 
 func respondFailure(w http.ResponseWriter, r *http.Request, c *core.Config, msg string, blocked bool, status int, baseURL string) {
