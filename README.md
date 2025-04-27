@@ -35,8 +35,8 @@ Check [Caddyfile](Caddyfile) for an example configuration.
 - [x] More frequent challenges (each solution only grants a few accesses)
 - [x] More frequent challenge rotation (per week -> per request)
 - [ ] Configurable challenge difficulty for each route
-- [ ] block_only" mode to serve as a blocklist even a route is not protected by PoW challenge
-- [ ] RandomX PoW
+- [ ] "block_only" mode to serve as a blocklist even a route is not protected by PoW challenge
+- [x] ~~RandomX PoW~~ unacceptably slow. Use blake3 (wasm) instead.
 - [ ] I18n
 - [ ] Non-AI mascot
 
