@@ -6,7 +6,7 @@
 	# Global configuration for cerberus.
 	cerberus {
 		# Challenge difficulty (number of leading zeroes in the hash).
-		difficulty 5
+		difficulty 6
 		# When set to true, the handler will drop the connection instead of returning a 403 if the IP is blocked.
 		# drop
 		# MaxPending is the maximum number of pending (and failed) requests.

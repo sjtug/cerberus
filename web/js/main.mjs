@@ -1,6 +1,6 @@
 // This file contains code adapted from https://github.com/TecharoHQ/anubis under the MIT License.
 
-import pow from "./proof-of-work.mjs";
+import pow from "./pow.mjs";
 
 class VerificationUI {
   static state = {
@@ -122,6 +122,7 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
   form.appendChild(nonceInput);
   form.appendChild(tsInput);
   form.appendChild(signatureInput);
+  form.appendChild(dataInput);
   form.appendChild(redirInput);
   document.body.appendChild(form);
 
@@ -158,7 +159,7 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
 
   const likelihood = Math.pow(16, -difficulty);
 
-  const mergedChallenge = `${challenge}|${inputNonce}|${ts}|${signature}`;
+  const mergedChallenge = `${challenge}|${inputNonce}|${ts}|${signature}|`;
   const { hash, nonce: solution } = await pow(mergedChallenge, difficulty, null, (iters) => {
     // the probability of still being on the page is (1 - likelihood) ^ iters.
     // by definition, half of the time the progress bar only gets to half, so
@@ -172,7 +173,6 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
     const now = Date.now();
     const delta = now - t0;
 
-    console.log("delta", delta, "lastUpdate", lastUpdate, "delta - lastUpdate", delta - lastUpdate);
     if (delta - lastUpdate > 100) {
       const speed = iters / delta;
       VerificationUI.setCheckingProgress(
@@ -182,9 +182,7 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
       );
       lastUpdate = delta;
     };
-
   });
-
   const t1 = Date.now();
   console.log({ hash, solution });
 
@@ -198,4 +196,5 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
   setTimeout(() => {
     form.submit();
   }, 250);
+
 })();

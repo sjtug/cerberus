@@ -101,7 +101,7 @@ func (e *Endpoint) answerHandle(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	answer, err := sha256sum(fmt.Sprintf("%s|%d|%d|%s%d", challenge, nonce, ts, signature, solution))
+	answer, err := blake3sum(fmt.Sprintf("%s|%d|%d|%s|%d", challenge, nonce, ts, signature, solution))
 	if err != nil {
 		e.logger.Error("failed to calculate answer", zap.Error(err))
 		return err
@@ -165,6 +165,10 @@ func tryServeFile(w http.ResponseWriter, r *http.Request) bool {
 
 	// Remove the /static/ prefix to get the actual file path
 	filePath := strings.TrimSuffix(caddyhttp.SanitizedPathJoin("/dist/", strings.TrimPrefix(r.URL.Path, "/static/")), "/")
+
+	// Add cache control headers for static assets
+	w.Header().Set("Cache-Control", "public, max-age=31536000") // Cache for 1 year
+	w.Header().Set("Vary", "Accept-Encoding")
 
 	// Create a new request with the modified path
 	req := *r

@@ -1,0 +1,19 @@
+{
+  "name": "cerberus-pow",
+  "version": "0.1.0",
+  "description": "",
+  "main": "main.mjs",
+  "type": "module",
+  "scripts": {
+    "build": "webpack --config webpack.config.js"
+  },
+  "author": "Yanning Chen <self@lightquantum.me>",
+  "license": "MIT",
+  "dependencies": {
+    "pow-wasm": "file:../../pow/pkg"
+  },
+  "devDependencies": {
+    "webpack": "^5.99.7",
+    "webpack-cli": "^6.0.1"
+  }
+}

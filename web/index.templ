@@ -24,7 +24,7 @@ templ Base(title string) {
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<title>{ title }</title>
-			<link rel="stylesheet" href={ GetBaseURL(ctx) + "/static/global.css" }/>
+			<link rel="stylesheet" href={ GetBaseURL(ctx) + "/static/global.css?v=" + GetVersion(ctx) }/>
 		</head>
 		<body class="min-h-screen flex flex-col items-center justify-center p-4 bg-[#fff8e7]">
 			<div class="text-center max-w-lg w-full px-4">
@@ -52,7 +52,7 @@ templ Challenge(challenge string, difficulty int, nonce uint32, ts int64, signat
 		<p id="metrics" class="text-gray-700 mb-4">metrics</p>
 		<p id="message" class="text-gray-700 mb-6">message</p>
 		<!-- Progress Bar (hidden in success state) -->
-		<div id="progress-container" class="w-full h-6 bg-white rounded-full border-2 border-[#B88DAD] p-1 mb-8">
+		<div id="progress-container" class="w-48 h-6 bg-white rounded-full border-2 border-[#B88DAD] p-1 mb-8 mx-auto">
 			<div id="progress-bar" class="h-full w-[60%] bg-[#B88DAD] rounded-full transition-all duration-300"></div>
 		</div>
 	</div>
@@ -88,7 +88,7 @@ templ Challenge(challenge string, difficulty int, nonce uint32, ts int64, signat
 	@templ.JSONScript("signature", signature)
 	@templ.JSONScript("baseURL", GetBaseURL(ctx))
 	@templ.JSONScript("version", GetVersion(ctx))
-	<script async type="module" src={ GetBaseURL(ctx) + "/static/main.mjs" }></script>
+	<script async type="module" src={ GetBaseURL(ctx) + "/static/bootstrap.js?v=" + GetVersion(ctx) }></script>
 }
 
 templ Error(message string, mail string) {

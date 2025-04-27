@@ -10,6 +10,7 @@
     golangci-lint
     tailwindcss_4
     pngquant
+    wasm-pack
   ];
 
   # https://devenv.sh/languages/
@@ -21,16 +22,26 @@
   tasks =
     let
       tailwindcss = "${pkgs.tailwindcss_4}/bin/tailwindcss";
-      esbuild = "${pkgs.esbuild}/bin/esbuild";
+      pnpm = "${pkgs.nodePackages.pnpm}/bin/pnpm";
       find = "${pkgs.findutils}/bin/find";
       xargs = "${pkgs.findutils}/bin/xargs";
       pngquant = "${pkgs.pngquant}/bin/pngquant";
       templ = "${pkgs.templ}/bin/templ";
+      wasm-pack = "${pkgs.wasm-pack}/bin/wasm-pack";
     in
     {
       "css:build".exec = "${tailwindcss} -i ./web/global.css -o ./web/dist/global.css --minify";
-      "js:bundle".exec =
-        "${esbuild} ./web/js/main.mjs --bundle --minify --outfile=./web/dist/main.mjs --allow-overwrite";
+      "wasm:build".exec = ''
+        ${wasm-pack} build --target web ./pow --no-default-features
+      '';
+      "js:bundle" = {
+        exec = ''
+          cd ./web/js
+          ${pnpm} i
+          ${pnpm} run build
+        '';
+        after = [ "wasm:build" ];
+      };
       "img:dist".exec = ''
         mkdir -p ./web/dist/img
         ${find} ./web/img -maxdepth 1 -name "*.png" -printf "%f\n" | ${xargs} -n 1 sh -c '${pngquant} --force --strip --quality 0-20 --speed 1 ./web/img/$0 -o ./web/dist/img/$0'

@@ -3,7 +3,6 @@ package directives
 import (
 	"context"
 	"crypto/ed25519"
-	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -65,15 +64,6 @@ func validateToken(token *jwt.Token) error {
 	}
 
 	return nil
-}
-
-func sha256sum(text string) (string, error) {
-	hash := sha256.New()
-	_, err := hash.Write([]byte(text))
-	if err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
 func blake3sum(text string) (string, error) {

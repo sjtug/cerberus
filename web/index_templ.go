@@ -64,9 +64,9 @@ func Base(title string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(GetBaseURL(ctx) + "/static/global.css")
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(GetBaseURL(ctx) + "/static/global.css?v=" + GetVersion(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/index.templ`, Line: 27, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/index.templ`, Line: 27, Col: 92}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -135,7 +135,7 @@ func Challenge(challenge string, difficulty int, nonce uint32, ts int64, signatu
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" alt=\"Cute anime mascot character\" class=\"mx-auto mb-6 p-6\"><div id=\"status-container\"><p id=\"status\" class=\"text-gray-700 mb-2\">status</p><p id=\"metrics\" class=\"text-gray-700 mb-4\">metrics</p><p id=\"message\" class=\"text-gray-700 mb-6\">message</p><!-- Progress Bar (hidden in success state) --><div id=\"progress-container\" class=\"w-full h-6 bg-white rounded-full border-2 border-[#B88DAD] p-1 mb-8\"><div id=\"progress-bar\" class=\"h-full w-[60%] bg-[#B88DAD] rounded-full transition-all duration-300\"></div></div></div><details class=\"mb-4\"><summary class=\"cursor-pointer text-gray-600 hover:text-gray-800\">Why am I seeing this?</summary><div class=\"mt-2 text-sm text-gray-600 space-y-2\"><p>You are seeing this because the administrator of this website has set up <a href=\"https://github.com/SJTUG/cerberus\" class=\"text-pink-600 hover:text-pink-700\">Cerberus</a> to protect the server against the scourge of PCDN attacks. This can and does cause downtime for the websites, which makes their resources inaccessible for everyone.</p><p>If you're familiar with <a href=\"https://github.com/TecharoHQ/anubis\" class=\"text-pink-600 hover:text-pink-700\">Anubis</a> by <a href=\"https://techaro.lol\" class=\"text-pink-600 hover:text-pink-700\">Techaro</a>, Cerberus is similar - it's a port of Anubis built for Caddy. But while Anubis focuses on protecting websites from AI scrapers, Cerberus serves a different purpose: it's designed as a last line of defense to protect volunteer-run open source infrastructure from aggressive PCDN attacks.</p><p>Please note that Cerberus requires the use of modern JavaScript features that plugins like <a href=\"https://jshelter.org/\" class=\"text-pink-600 hover:text-pink-700\">JShelter</a> will disable. Please disable JShelter or other such plugins for this domain.</p></div></details><noscript><p>You must enable JavaScript to get past this challenge.</p></noscript>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" alt=\"Cute anime mascot character\" class=\"mx-auto mb-6 p-6\"><div id=\"status-container\"><p id=\"status\" class=\"text-gray-700 mb-2\">status</p><p id=\"metrics\" class=\"text-gray-700 mb-4\">metrics</p><p id=\"message\" class=\"text-gray-700 mb-6\">message</p><!-- Progress Bar (hidden in success state) --><div id=\"progress-container\" class=\"w-48 h-6 bg-white rounded-full border-2 border-[#B88DAD] p-1 mb-8 mx-auto\"><div id=\"progress-bar\" class=\"h-full w-[60%] bg-[#B88DAD] rounded-full transition-all duration-300\"></div></div></div><details class=\"mb-4\"><summary class=\"cursor-pointer text-gray-600 hover:text-gray-800\">Why am I seeing this?</summary><div class=\"mt-2 text-sm text-gray-600 space-y-2\"><p>You are seeing this because the administrator of this website has set up <a href=\"https://github.com/SJTUG/cerberus\" class=\"text-pink-600 hover:text-pink-700\">Cerberus</a> to protect the server against the scourge of PCDN attacks. This can and does cause downtime for the websites, which makes their resources inaccessible for everyone.</p><p>If you're familiar with <a href=\"https://github.com/TecharoHQ/anubis\" class=\"text-pink-600 hover:text-pink-700\">Anubis</a> by <a href=\"https://techaro.lol\" class=\"text-pink-600 hover:text-pink-700\">Techaro</a>, Cerberus is similar - it's a port of Anubis built for Caddy. But while Anubis focuses on protecting websites from AI scrapers, Cerberus serves a different purpose: it's designed as a last line of defense to protect volunteer-run open source infrastructure from aggressive PCDN attacks.</p><p>Please note that Cerberus requires the use of modern JavaScript features that plugins like <a href=\"https://jshelter.org/\" class=\"text-pink-600 hover:text-pink-700\">JShelter</a> will disable. Please disable JShelter or other such plugins for this domain.</p></div></details><noscript><p>You must enable JavaScript to get past this challenge.</p></noscript>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -172,9 +172,9 @@ func Challenge(challenge string, difficulty int, nonce uint32, ts int64, signatu
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(GetBaseURL(ctx) + "/static/main.mjs")
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(GetBaseURL(ctx) + "/static/bootstrap.js?v=" + GetVersion(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/index.templ`, Line: 91, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/index.templ`, Line: 91, Col: 96}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
