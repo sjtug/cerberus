@@ -10,9 +10,6 @@ on:
         required: false
         default: ''
 
-permissions:
-  contents: write
-
 jobs:
   build-and-deploy:
     name: Build artifacts and update dist branch
@@ -21,6 +18,7 @@ jobs:
       - name: Checkout master
         uses: actions/checkout@v4
         with:
+          ssh-key: "${{ secrets.DIST_PUSH_KEY }}"
           fetch-depth: 0
 
       - name: Verify version
