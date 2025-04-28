@@ -1,0 +1,71 @@
+{
+	log default {
+		level DEBUG
+	}
+
+	# Global configuration for cerberus.
+	cerberus {
+		# Challenge difficulty (number of leading zeroes in the hash).
+		difficulty 6
+		# When set to true, the handler will drop the connection instead of returning a 403 if the IP is blocked.
+		# drop
+		# MaxPending is the maximum number of pending (and failed) requests.
+		# Any IP block (prefix configured in prefix_cfg) with more than this number of pending requests will be blocked.
+		max_pending 128
+		# AccessPerApproval is the number of requests allowed per successful challenge. We recommend a value greater than 8 to support parallel and resumable downloads.
+		access_per_approval 8
+		# BlockTTL is the time to live for blocked IPs.
+		block_ttl "24h"
+		# PendingTTL is the time to live for pending requests when considering whether to block an IP.
+		pending_ttl "1h"
+		# ApprovalTTL is the time to live for approved requests.
+		approval_ttl "1h"
+		# MaxMemUsage is the maximum memory usage for the pending and blocklist caches.
+		max_mem_usage "512MiB"
+		# CookieName is the name of the cookie used to store signed certificate.
+		cookie_name "cerberus-auth"
+		# HeaderName is the name of the header used to store cerberus status ("PASS-BRIEF", "PASS-FULL", "BLOCK", "FAIL").
+		header_name "X-Cerberus-Status"
+		# Title is the title of the challenge page.
+		title "Cerberus Challenge"
+		# Mail is the email address to contact for support.
+		mail "admin@example.com"
+		# PrefixCfg is to configure prefixes used to block users in these IP prefix blocks, e.g., /24 /64.
+		# The first argument is for IPv4 and the second is for IPv6.
+		prefix_cfg 20 64
+	}
+}
+
+localhost {
+	encode
+
+	# You need to deploy a handler for each cerberus instance.
+	# This route will be used to serve challenge endpoints and static files.
+	handle_path /.cerberus/* {
+		cerberus_endpoint
+	}
+
+	@cerberus {
+		path *.iso
+		header User-Agent *Mozilla*
+	}
+
+	# This is the actual middleware that will be used to challenge requests.
+	# You can attach a named matcher to the cerberus directive. Only requests matching the matcher will be challenged.
+	cerberus @cerberus {
+		# The base URL for the challenge. It must be the same as the deployed endpoint route.
+		base_url "/.cerberus"
+	}
+
+	handle / {
+		respond "Hello, world!"
+	}
+
+	handle /foo {
+		respond "Hello, foo!"
+	}
+
+	handle /foo.iso {
+		respond "Hello, foo.iso!"
+	}
+}

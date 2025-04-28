@@ -1,0 +1,104 @@
+name: Build and Update Dist Branch
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to tag (e.g., v1.0.0)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    name: Build artifacts and update dist branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify version
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.version != '' }}
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          CODE_VERSION=$(grep -o 'Version\s*=\s*"v[^"]*"' core/const.go | cut -d'"' -f2)
+          
+          if [ "$VERSION" != "$CODE_VERSION" ]; then
+            echo "::error::Version mismatch: Requested tag '$VERSION' does not match version in code '$CODE_VERSION'"
+            echo "::error::Please update the version in core/const.go before tagging"
+            exit 1
+          fi
+          
+          echo "Version verified: $VERSION matches code version"
+
+      - name: Setup Nix
+        uses: cachix/install-nix-action@v26
+      
+      - name: Cache Nix
+        uses: cachix/cachix-action@v14
+        with:
+          name: devenv
+      
+      - name: Install devenv.sh
+        run: nix profile install nixpkgs#devenv
+
+      - name: Setup Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      
+      - name: Create or checkout dist branch
+        run: |
+          COMMIT_SHA="${GITHUB_SHA}"
+
+          # Check if dist branch exists
+          if git show-ref --verify --quiet refs/remotes/origin/dist; then
+            # If it exists, create a local copy
+            git checkout -b dist origin/dist
+          else
+            # If it doesn't exist, create a new one
+            git checkout --orphan dist
+            git rm -rf .
+          fi
+
+          # Copy content from current ref
+          git checkout $COMMIT_SHA -- .
+
+          # Remove the original .gitignore and create a minimal one without excluding dist files
+          rm -f .gitignore
+          cp .dist.gitignore .gitignore
+      
+      - name: Build artifacts
+        run: |
+          devenv tasks run dist:clean
+          devenv tasks run dist:build
+      
+      - name: Commit and push dist branch
+        run: |
+          COMMIT_SHA="${GITHUB_SHA}"
+
+          # Add all files
+          git add -A
+          
+          # Commit with source commit hash for reference
+          git commit -m "Update dist branch from master (${COMMIT_SHA})" || echo "No changes to commit"
+          
+          # Push to dist branch
+          git push origin dist 
+
+      - name: Tag dist branch
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.version != '' }}
+        run: |
+          # Check if version is provided
+          VERSION="${{ github.event.inputs.version }}"
+          if [ -n "$VERSION" ]; then
+            git tag -a "$VERSION" -m "Release $VERSION"
+            git push origin "$VERSION"
+            echo "Tagged dist branch with $VERSION"
+          fi 
