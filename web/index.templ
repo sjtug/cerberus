@@ -88,7 +88,7 @@ templ Challenge(challenge string, difficulty int, nonce uint32, ts int64, signat
 	@templ.JSONScript("signature", signature)
 	@templ.JSONScript("baseURL", GetBaseURL(ctx))
 	@templ.JSONScript("version", GetVersion(ctx))
-	<script async type="module" src={ GetBaseURL(ctx) + "/static/bootstrap.js?v=" + GetVersion(ctx) }></script>
+	<script async type="module" src={ GetBaseURL(ctx) + "/static/main.js?v=" + GetVersion(ctx) }></script>
 }
 
 templ Error(message string, mail string) {

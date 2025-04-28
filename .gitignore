@@ -37,3 +37,5 @@ go.work.sum
 # env file
 .env
 caddy
+
+.parcel-cache

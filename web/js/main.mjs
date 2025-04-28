@@ -122,7 +122,6 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
   form.appendChild(nonceInput);
   form.appendChild(tsInput);
   form.appendChild(signatureInput);
-  form.appendChild(dataInput);
   form.appendChild(redirInput);
   document.body.appendChild(form);
 

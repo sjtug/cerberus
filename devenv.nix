@@ -22,12 +22,12 @@
   tasks =
     let
       tailwindcss = "${pkgs.tailwindcss_4}/bin/tailwindcss";
-      pnpm = "${pkgs.nodePackages.pnpm}/bin/pnpm";
       find = "${pkgs.findutils}/bin/find";
       xargs = "${pkgs.findutils}/bin/xargs";
       pngquant = "${pkgs.pngquant}/bin/pngquant";
       templ = "${pkgs.templ}/bin/templ";
       wasm-pack = "${pkgs.wasm-pack}/bin/wasm-pack";
+      pnpx = "${pkgs.nodePackages.pnpm}/bin/pnpx";
     in
     {
       "css:build".exec = "${tailwindcss} -i ./web/global.css -o ./web/dist/global.css --minify";
@@ -35,11 +35,7 @@
         ${wasm-pack} build --target web ./pow --no-default-features
       '';
       "js:bundle" = {
-        exec = ''
-          cd ./web/js
-          ${pnpm} i
-          ${pnpm} run build
-        '';
+        exec = "${pnpx} parcel build ./web/js/main.mjs --dist-dir ./web/dist/";
         after = [ "wasm:build" ];
       };
       "img:dist".exec = ''

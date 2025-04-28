@@ -1,5 +1,5 @@
 // This file contains code adapted from https://github.com/TecharoHQ/anubis under the MIT License.
-import wasm from 'pow-wasm/pow_bg.wasm?raw';
+import wasm from 'url:../../pow/pkg/pow_bg.wasm';
 
 export default async function process(
   data,
