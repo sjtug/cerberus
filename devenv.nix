@@ -28,6 +28,7 @@
       templ = "${pkgs.templ}/bin/templ";
       wasm-pack = "${pkgs.wasm-pack}/bin/wasm-pack";
       pnpx = "${pkgs.nodePackages.pnpm}/bin/pnpx";
+      golangci-lint = "${pkgs.golangci-lint}/bin/golangci-lint";
     in
     {
       "css:build".exec = "${tailwindcss} -i ./web/global.css -o ./web/dist/global.css --minify";
@@ -50,6 +51,10 @@
         "img:dist"
         "go:codegen"
       ];
+      "go:lint" = {
+        exec = "${golangci-lint} run";
+        after = [ "go:codegen" ];
+      };
     };
 
   # tasks = {

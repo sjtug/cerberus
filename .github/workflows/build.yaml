@@ -17,6 +17,10 @@ jobs:
           name: devenv
       - name: Install devenv.sh
         run: nix profile install nixpkgs#devenv
+      - name: Build Web Assets
+        run: |
+          devenv tasks run dist:clean
+          devenv tasks run dist:build
       - name: Build
         run: devenv shell xcaddy build
       - name: Upload artifacts
@@ -24,21 +28,6 @@ jobs:
         with:
           name: "caddy"
           path: "caddy"
-  build-web:
-    name: Build Web
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v26
-      - uses: cachix/cachix-action@v14
-        with:
-          name: devenv
-      - name: Install devenv.sh
-        run: nix profile install nixpkgs#devenv
-      - name: Build
-        run: |
-          devenv tasks run dist:clean
-          devenv tasks run dist:build
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -50,5 +39,9 @@ jobs:
           name: devenv
       - name: Install devenv.sh
         run: nix profile install nixpkgs#devenv
-      - name: Build
+      - name: Build Web Assets
+        run: |
+          devenv tasks run dist:clean
+          devenv tasks run dist:build
+      - name: Test
         run: devenv test

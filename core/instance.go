@@ -16,7 +16,7 @@ type Instance struct {
 // User can pass in an optional logger to log basic metrics about the initialized state.
 func (i *Instance) UpdateWithConfig(c Config, logger *zap.Logger) error {
 	logger.Info("updating cerberus instance config")
-	if i.Config.StateCompatible(&c) {
+	if i.StateCompatible(&c) {
 		// We only need to update the config.
 		i.Config = c
 	} else {
@@ -27,7 +27,7 @@ func (i *Instance) UpdateWithConfig(c Config, logger *zap.Logger) error {
 			return err
 		}
 		i.Config = c
-		i.InstanceState.Close() // Close the old state
+		i.Close() // Close the old state
 		i.InstanceState = state
 		logger.Info("cerberus state initialized",
 			zap.Int64("pending_elems", pendingElems),
