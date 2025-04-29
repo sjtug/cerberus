@@ -46,7 +46,27 @@ templ Base(title string) {
 }
 
 templ Challenge(challenge string, difficulty int, nonce uint32, ts int64, signature string) {
-	<img id="mascot" src={ GetBaseURL(ctx) + "/static/img/mascot-puzzle.png?v=" + GetVersion(ctx) } alt="Cute anime mascot character" class="mx-auto mb-6 p-6"/>
+	{{
+		challengeInput := struct {
+			Challenge  string `json:"challenge"`
+			Difficulty int    `json:"difficulty"`
+			Nonce      uint32 `json:"nonce"`
+			TS         int64  `json:"ts"`
+			Signature  string `json:"signature"`
+		}{challenge, difficulty, nonce, ts, signature}
+
+		baseURL := GetBaseURL(ctx)
+		version := GetVersion(ctx)
+		metaInput := struct {
+			BaseURL string `json:"baseURL"`
+			Version string `json:"version"`
+		}{baseURL, version}
+
+		relPath := func(path string) string {
+			return baseURL + path + "?v=" + version
+		}
+	}}
+	<img id="mascot" src={ relPath("/static/img/mascot-puzzle.png") } alt="Cute anime mascot character" class="mx-auto mb-6 p-6"/>
 	<div id="status-container">
 		<p id="status" class="text-gray-700 mb-2">status</p>
 		<p id="metrics" class="text-gray-700 mb-4">metrics</p>
@@ -61,7 +81,8 @@ templ Challenge(challenge string, difficulty int, nonce uint32, ts int64, signat
 		<div class="mt-2 text-sm text-gray-600 space-y-2">
 			<p>
 				You are seeing this because the administrator of this website has set up <a
-	href="https://github.com/SJTUG/cerberus" class="text-pink-600 hover:text-pink-700"
+	href="https://github.com/SJTUG/cerberus"
+	class="text-pink-600 hover:text-pink-700"
 >Cerberus</a> to protect the server against the scourge of PCDN attacks. This can and does cause downtime for the websites, which makes their
 				resources inaccessible for everyone.
 			</p>
@@ -70,7 +91,8 @@ templ Challenge(challenge string, difficulty int, nonce uint32, ts int64, signat
 			</p>
 			<p>
 				Please note that Cerberus requires the use of modern JavaScript features that plugins like <a
-	href="https://jshelter.org/" class="text-pink-600 hover:text-pink-700"
+	href="https://jshelter.org/"
+	class="text-pink-600 hover:text-pink-700"
 >JShelter</a> will disable. Please disable JShelter or other such
 				plugins for this domain.
 			</p>
@@ -81,14 +103,7 @@ templ Challenge(challenge string, difficulty int, nonce uint32, ts int64, signat
 			You must enable JavaScript to get past this challenge.
 		</p>
 	</noscript>
-	@templ.JSONScript("challenge", challenge)
-	@templ.JSONScript("difficulty", difficulty)
-	@templ.JSONScript("nonce", nonce)
-	@templ.JSONScript("ts", ts)
-	@templ.JSONScript("signature", signature)
-	@templ.JSONScript("baseURL", GetBaseURL(ctx))
-	@templ.JSONScript("version", GetVersion(ctx))
-	<script async defer src={ GetBaseURL(ctx) + "/static/main.js?v=" + GetVersion(ctx) }></script>
+	<script async defer id="challenge-script" x-meta={ templ.JSONString(metaInput) } x-challenge={ templ.JSONString(challengeInput) } src={ relPath("/static/main.js") }></script>
 }
 
 templ Error(message string, mail string) {

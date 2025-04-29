@@ -133,13 +133,9 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
   // const spinner = document.getElementById('spinner');
   // const anubisVersion = JSON.parse(document.getElementById('anubis_version').textContent);
 
-  const challenge = JSON.parse(document.getElementById('challenge').textContent);
-  const difficulty = JSON.parse(document.getElementById('difficulty').textContent);
-  const baseURL = JSON.parse(document.getElementById('baseURL').textContent);
-  const version = JSON.parse(document.getElementById('version').textContent);
-  const inputNonce = JSON.parse(document.getElementById('nonce').textContent);
-  const ts = JSON.parse(document.getElementById('ts').textContent);
-  const signature = JSON.parse(document.getElementById('signature').textContent);
+  const thisScript = document.getElementById('challenge-script');
+  const { challenge, difficulty, nonce: inputNonce, ts, signature } = JSON.parse(thisScript.getAttribute('x-challenge'));
+  const { baseURL, version } = JSON.parse(thisScript.getAttribute('x-meta'));
 
   // Initialize VerificationUI with configuration
   VerificationUI.initialize({
