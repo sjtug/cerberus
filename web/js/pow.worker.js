@@ -1,4 +1,4 @@
-import { initSync, process_task } from "../../pow/pkg/pow.js";
+import { initSync, process_task } from "pow-wasm";
 
 addEventListener('message', async (event) => {
     initSync({ module: event.data.wasmModule });

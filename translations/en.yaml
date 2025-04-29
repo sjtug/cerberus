@@ -1,0 +1,10 @@
+en:
+  challenge:
+    title: "Making sure you're not a bot!"
+    calculating: "Calculating..."
+    difficulty_speed: "Difficulty: %{difficulty}, Speed: %{speed}kH/s"
+    taking_longer: "This is taking longer than expected. Please do not refresh the page."
+  success:
+    title: "Success!"
+    verification_complete: "Verification Complete!"
+    took_time_iterations: "Took %{time}ms, %{iterations} iterations"

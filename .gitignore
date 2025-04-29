@@ -42,5 +42,6 @@ caddy
 
 # Generated files (excluded from master branch, but included in dist branch)
 web/dist
+web/js/icu/compiled.mjs
 # Note that we ignore go generated files deliberately, as downstream projects are expected to use the dist branch.
 web/index_templ.go

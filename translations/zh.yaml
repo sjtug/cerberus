@@ -1,0 +1,11 @@
+# I know I should split this into zh-Hans and zh-Hant, but @messageformat/convert only supports CLDR plural categories
+zh:
+  challenge:
+    title: "确保你不是机器人！"
+    calculating: "计算中..."
+    difficulty_speed: "难度: %{difficulty}, 速度: %{speed}kH/s"
+    taking_longer: "这比预期的要慢，请不要刷新页面。"
+  success:
+    title: "成功！"
+    verification_complete: "验证完成！"
+    took_time_iterations: "用时 %{time}ms, 迭代 %{iterations} 次"

@@ -1,6 +1,15 @@
 // This file contains code adapted from https://github.com/TecharoHQ/anubis under the MIT License.
 
 import pow from "./pow.mjs";
+import Messages from "@messageformat/runtime/messages"
+import msgData from "./icu/compiled.mjs"
+
+const messages = new Messages(msgData)
+console.log(messages.locale, messages.availableLocales);
+
+function t(key, props) {
+  return messages.get(key.split('.'), props)
+}
 
 const meta = {
   baseURL: "",
@@ -67,10 +76,10 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
   meta.version = version;
 
   // Set initial checking state
-  ui.title('Making sure you\'re not a bot!');
+  ui.title(t('challenge.title'));
   ui.mascotState('puzzle');
-  ui.status('Calculating...');
-  ui.metrics(`Difficulty: ${difficulty}, Speed: calculating...`);
+  ui.status(t('challenge.calculating'));
+  ui.metrics(t('challenge.difficulty_speed', { difficulty, speed: 0 }));
   ui.message('');
   ui.progress(0);
 
@@ -96,8 +105,8 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
     if (delta - lastUpdate > 100) {
       const speed = iters / delta;
       ui.progress(distance);
-      ui.metrics(`Difficulty: ${difficulty}, Speed: ${speed.toFixed(3)}kH/s`);
-      ui.message(probability < 0.01 ? 'This is taking longer than expected. Please do not refresh the page.' : undefined);
+      ui.metrics(t('challenge.difficulty_speed', { difficulty, speed: speed.toFixed(3) }));
+      ui.message(probability < 0.01 ? t('challenge.taking_longer') : undefined);
       lastUpdate = delta;
     };
   });
@@ -105,10 +114,10 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
   console.log({ hash, solution });
 
   // Show success state
-  ui.title('Success!');
+  ui.title(t('success.title'));
   ui.mascotState('pass');
-  ui.status('Verification Complete!');
-  ui.metrics(`Took ${t1 - t0}ms, ${solution} iterations`);
+  ui.status(t('success.verification_complete'));
+  ui.metrics(t('success.took_time_iterations', { time: t1 - t0, iterations: solution }));
   ui.message('');
   ui.progress(0);
 

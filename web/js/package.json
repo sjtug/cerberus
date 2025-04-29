@@ -3,5 +3,14 @@
     "version": "0.0.1",
     "private": true,
     "source": "main.mjs",
-    "browserslist": "last 2 versions, not dead, > 0.2%"
+    "browserslist": "last 2 versions, not dead, > 0.2%",
+    "type": "module",
+    "dependencies": {
+        "@messageformat/convert": "^1.0.0",
+        "@messageformat/core": "^3.4.0",
+        "@messageformat/runtime": "^3.0.1",
+        "glob": "^11.0.2",
+        "pow-wasm": "file:../../pow/pkg",
+        "yaml": "^2.7.1"
+    }
 }
