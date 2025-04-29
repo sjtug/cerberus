@@ -2,129 +2,54 @@
 
 import pow from "./pow.mjs";
 
-class VerificationUI {
-  static state = {
-    baseURL: '',
-    version: 'unknown'
-  };
+const meta = {
+  baseURL: "",
+  version: ""
+}
 
-  static elements = {
-    title: null,
-    mascot: null,
-    status: null,
-    metrics: null,
-    message: null,
-    progressContainer: null,
-    progressBar: null
-  };
+const dom = {
+  title: document.getElementById('title'),
+  mascot: document.getElementById('mascot'),
+  status: document.getElementById('status'),
+  metrics: document.getElementById('metrics'),
+  message: document.getElementById('message'),
+  progressContainer: document.getElementById('progress-container'),
+  progressBar: document.getElementById('progress-bar')
+}
 
-  static initialize(config) {
-    this.state = {
-      ...this.state,
-      ...config
-    };
-
-    // Cache DOM elements
-    this.elements = {
-      title: document.getElementById('title'),
-      mascot: document.getElementById('mascot'),
-      status: document.getElementById('status'),
-      metrics: document.getElementById('metrics'),
-      message: document.getElementById('message'),
-      progressContainer: document.getElementById('progress-container'),
-      progressBar: document.getElementById('progress-bar')
-    };
-  }
-
-  static setState(state, data = {}) {
-    switch (state) {
-      case 'checking':
-        this.setChecking(data);
-        break;
-      case 'success':
-        this.setSuccess(data);
-        break;
-    }
-  }
-
-  static setChecking(data) {
-    this.elements.title.textContent = data.title || "Making sure you're not a bot!";
-    this.elements.mascot.src = `${this.state.baseURL}/static/img/mascot-puzzle.png?v=${this.state.version}`;
-    this.elements.status.textContent = data.status || 'Calculating...';
-    this.elements.progressContainer.classList.remove('hidden');
-    this.setCheckingProgress(data.progress, data.metrics, data.message);
-  }
-
-  static setCheckingProgress(percent, metrics, message) {
-    if (percent !== undefined) {
-      this.elements.progressBar.style.width = `${percent}%`;
-    }
-    if (metrics !== undefined) {
-      if (metrics === "") {
-        this.elements.metrics.classList.add('hidden');
-      } else {
-        this.elements.metrics.classList.remove('hidden');
-        this.elements.metrics.textContent = metrics;
-      }
-    }
-    if (message !== undefined) {
-      this.elements.message.textContent = message;
-    }
-  }
-
-  static setSuccess(data) {
-    this.elements.title.textContent = 'Success!';
-    this.elements.mascot.src = `${this.state.baseURL}/static/img/mascot-pass.png?v=${this.state.version}`;
-    this.elements.status.textContent = data.status || 'Done!';
-    this.elements.metrics.textContent = data.metrics || 'Took ?, ? iterations';
-    this.elements.message.textContent = data.message || '';
-    this.elements.progressContainer.classList.add('hidden');
+const ui = {
+  title: (title) => dom.title.textContent = title,
+  mascotState: (state) => dom.mascot.src = `${meta.baseURL}/static/img/mascot-${state}.png?v=${meta.version}`,
+  status: (status) => dom.status.textContent = status,
+  metrics: (metrics) => dom.metrics.textContent = metrics,
+  message: (message) => dom.message.textContent = message,
+  progress: (progress) => {
+    dom.progressContainer.classList.toggle('hidden', !progress);
+    dom.progressBar.style.width = `${progress}%`;
   }
 }
 
 function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
+  function addHiddenInput(form, name, value) {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = name;
+    input.value = value;
+    form.appendChild(input);
+  }
+
   const form = document.createElement('form');
   form.method = 'POST';
   form.action = `${baseURL}/answer`;
 
-  const responseInput = document.createElement('input');
-  responseInput.type = 'hidden';
-  responseInput.name = 'response';
-  responseInput.value = hash;
+  addHiddenInput(form, 'response', hash);
+  addHiddenInput(form, 'solution', solution);
+  addHiddenInput(form, 'nonce', nonce);
+  addHiddenInput(form, 'ts', ts);
+  addHiddenInput(form, 'signature', signature);
+  addHiddenInput(form, 'redir', window.location.href);
 
-  const solutionInput = document.createElement('input');
-  solutionInput.type = 'hidden';
-  solutionInput.name = 'solution';
-  solutionInput.value = solution;
-
-  const nonceInput = document.createElement('input');
-  nonceInput.type = 'hidden';
-  nonceInput.name = 'nonce';
-  nonceInput.value = nonce;
-
-  const tsInput = document.createElement('input');
-  tsInput.type = 'hidden';
-  tsInput.name = 'ts';
-  tsInput.value = ts;
-
-  const signatureInput = document.createElement('input');
-  signatureInput.type = 'hidden';
-  signatureInput.name = 'signature';
-  signatureInput.value = signature;
-
-  const redirInput = document.createElement('input');
-  redirInput.type = 'hidden';
-  redirInput.name = 'redir';
-  redirInput.value = window.location.href;
-
-  form.appendChild(responseInput);
-  form.appendChild(solutionInput);
-  form.appendChild(nonceInput);
-  form.appendChild(tsInput);
-  form.appendChild(signatureInput);
-  form.appendChild(redirInput);
   document.body.appendChild(form);
-
   return form;
 }
 
@@ -137,17 +62,17 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
   const { challenge, difficulty, nonce: inputNonce, ts, signature } = JSON.parse(thisScript.getAttribute('x-challenge'));
   const { baseURL, version } = JSON.parse(thisScript.getAttribute('x-meta'));
 
-  // Initialize VerificationUI with configuration
-  VerificationUI.initialize({
-    baseURL,
-    version
-  });
+  // Initialize UI
+  meta.baseURL = baseURL;
+  meta.version = version;
 
   // Set initial checking state
-  VerificationUI.setState('checking', {
-    metrics: `Difficulty: ${difficulty}, Speed: calculating...`,
-    message: ""
-  });
+  ui.title('Making sure you\'re not a bot!');
+  ui.mascotState('puzzle');
+  ui.status('Calculating...');
+  ui.metrics(`Difficulty: ${difficulty}, Speed: calculating...`);
+  ui.message('');
+  ui.progress(0);
 
   const t0 = Date.now();
   let lastUpdate = 0;
@@ -170,11 +95,9 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
 
     if (delta - lastUpdate > 100) {
       const speed = iters / delta;
-      VerificationUI.setCheckingProgress(
-        distance,
-        `Difficulty: ${difficulty}, Speed: ${speed.toFixed(3)}kH/s`,
-        probability < 0.01 ? 'This is taking longer than expected. Please do not refresh the page.' : undefined
-      );
+      ui.progress(distance);
+      ui.metrics(`Difficulty: ${difficulty}, Speed: ${speed.toFixed(3)}kH/s`);
+      ui.message(probability < 0.01 ? 'This is taking longer than expected. Please do not refresh the page.' : undefined);
       lastUpdate = delta;
     };
   });
@@ -182,10 +105,12 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
   console.log({ hash, solution });
 
   // Show success state
-  VerificationUI.setState('success', {
-    status: 'Verification Complete!',
-    metrics: `Took ${t1 - t0}ms, ${solution} iterations`
-  });
+  ui.title('Success!');
+  ui.mascotState('pass');
+  ui.status('Verification Complete!');
+  ui.metrics(`Took ${t1 - t0}ms, ${solution} iterations`);
+  ui.message('');
+  ui.progress(0);
 
   const form = createAnswerForm(hash, solution, baseURL, inputNonce, ts, signature);
   setTimeout(() => {
