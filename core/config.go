@@ -1,11 +1,17 @@
 package core
 
 import (
+	"bytes"
+	"crypto/ed25519"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/sjtug/cerberus/internal/ipblock"
+	"go.uber.org/zap"
+	"golang.org/x/crypto/ssh"
 )
 
 const (
@@ -29,6 +35,8 @@ type Config struct {
 	Difficulty int `json:"difficulty,omitempty"`
 	// When set to true, the handler will drop the connection instead of returning a 403 if the IP is blocked.
 	Drop bool `json:"drop,omitempty"`
+	// Ed25519 signing key file path. If not provided, a new key will be generated.
+	Ed25519KeyFile string `json:"ed25519_key_file,omitempty"`
 	// MaxPending is the maximum number of pending (and failed) requests.
 	// Any IP block (prefix configured in prefix_cfg) with more than this number of pending requests will be blocked.
 	MaxPending int32 `json:"max_pending,omitempty"`
@@ -52,9 +60,12 @@ type Config struct {
 	Mail string `json:"mail,omitempty"`
 	// PrefixCfg is to configure prefixes used to block users in these IP prefix blocks, e.g., /24 /64.
 	PrefixCfg ipblock.Config `json:"prefix_cfg,omitempty"`
+
+	ed25519Key ed25519.PrivateKey
+	ed25519Pub ed25519.PublicKey
 }
 
-func (c *Config) Provision() {
+func (c *Config) Provision(logger *zap.Logger) error {
 	if c.Difficulty == 0 {
 		c.Difficulty = DefaultDifficulty
 	}
@@ -91,6 +102,31 @@ func (c *Config) Provision() {
 			V6Prefix: DefaultIPV6Prefix,
 		}
 	}
+
+	if c.Ed25519KeyFile != "" {
+		logger.Info("loading ed25519 key from file", zap.String("path", c.Ed25519KeyFile))
+
+		raw, err := os.ReadFile(c.Ed25519KeyFile)
+		if err != nil {
+			return fmt.Errorf("failed to read ed25519 key file: %w", err)
+		}
+
+		c.ed25519Key, err = LoadEd25519Key(raw)
+		if err != nil {
+			return fmt.Errorf("failed to load ed25519 key: %w", err)
+		}
+
+		c.ed25519Pub = c.ed25519Key.Public().(ed25519.PublicKey)
+	} else {
+		logger.Info("generating new ed25519 key")
+		var err error
+		c.ed25519Pub, c.ed25519Key, err = ed25519.GenerateKey(nil)
+		if err != nil {
+			return fmt.Errorf("failed to generate ed25519 key: %w", err)
+		}
+	}
+
+	return nil
 }
 
 func (c *Config) Validate() error {
@@ -125,6 +161,45 @@ func (c *Config) Validate() error {
 func (c *Config) StateCompatible(other *Config) bool {
 	return c.BlockTTL == other.BlockTTL &&
 		c.PendingTTL == other.PendingTTL &&
+		c.ApprovalTTL == other.ApprovalTTL &&
+		c.AccessPerApproval == other.AccessPerApproval &&
 		c.MaxMemUsage == other.MaxMemUsage &&
 		c.PrefixCfg == other.PrefixCfg
+}
+
+func (c *Config) GetPublicKey() ed25519.PublicKey {
+	return c.ed25519Pub
+}
+
+func (c *Config) GetPrivateKey() ed25519.PrivateKey {
+	return c.ed25519Key
+}
+
+func LoadEd25519Key(data []byte) (ed25519.PrivateKey, error) {
+	// First try to parse as openssh or x509 private key
+	if bytes.HasPrefix(data, []byte("-----BEGIN ")) {
+		raw, err := ssh.ParseRawPrivateKey(data)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse pem private key: %w", err)
+		}
+		if key, ok := raw.(ed25519.PrivateKey); ok {
+			return key, nil
+		}
+		if key, ok := raw.(*ed25519.PrivateKey); ok {
+			return *key, nil
+		}
+		return nil, errors.New("must be ed25519 private key")
+	}
+
+	// Then try to parse as hex
+	raw, err := hex.DecodeString(string(data))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse hex private key: %w", err)
+	}
+	if len(raw) != ed25519.SeedSize {
+		return nil, fmt.Errorf("invalid ed25519 private key: expected %d bytes, got %d", ed25519.SeedSize, len(raw))
+	}
+
+	key := ed25519.NewKeyFromSeed(raw)
+	return key, nil
 }

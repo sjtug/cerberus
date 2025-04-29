@@ -28,6 +28,15 @@ func (c *App) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 			c.Difficulty = difficulty
 		case "drop":
 			c.Drop = true
+		case "ed25519_key_file":
+			if !d.NextArg() {
+				return d.ArgErr()
+			}
+			ed25519KeyFile, ok := d.ScalarVal().(string)
+			if !ok {
+				return d.Errf("ed25519_key_file must be a string")
+			}
+			c.Ed25519KeyFile = ed25519KeyFile
 		case "max_pending":
 			if !d.NextArg() {
 				return d.ArgErr()

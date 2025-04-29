@@ -14,7 +14,6 @@ import (
 	"github.com/sjtug/cerberus/internal/expiremap"
 	"github.com/sjtug/cerberus/internal/ipblock"
 	"github.com/zeebo/xxh3"
-	"golang.org/x/crypto/ed25519"
 )
 
 const (
@@ -40,8 +39,6 @@ func hashUUID(id uuid.UUID) uint32 {
 }
 
 type InstanceState struct {
-	pub       ed25519.PublicKey
-	priv      ed25519.PrivateKey
 	fp        string
 	pending   freelru.Cache[ipblock.IPBlock, *atomic.Int32]
 	blocklist freelru.Cache[ipblock.IPBlock, struct{}]
@@ -96,16 +93,20 @@ func initUsedNonce(stop chan struct{}, purgeInterval time.Duration) *expiremap.E
 	return usedNonce
 }
 
-func NewInstanceState(pendingMaxMemUsage int64, blocklistMaxMemUsage int64, approvedMaxMemUsage int64, pendingTTL time.Duration, blocklistTTL time.Duration, approvalTTL time.Duration) (*InstanceState, int64, int64, int64, error) {
+func NewInstanceState(config Config) (*InstanceState, int64, int64, int64, error) {
 	uuid.EnableRandPool()
 
 	stop := make(chan struct{})
+
+	pendingMaxMemUsage := config.MaxMemUsage / 10
+	blocklistMaxMemUsage := config.MaxMemUsage / 10
+	approvalMaxMemUsage := config.MaxMemUsage * 4 / 5
 
 	pendingElems := uint32(pendingMaxMemUsage / PendingItemCost) // #nosec G115 we trust config input
 	pending, err := initLRU[ipblock.IPBlock, *atomic.Int32](
 		pendingElems,
 		hashIPBlock,
-		pendingTTL,
+		config.PendingTTL,
 		stop,
 		37*time.Second,
 	)
@@ -117,7 +118,7 @@ func NewInstanceState(pendingMaxMemUsage int64, blocklistMaxMemUsage int64, appr
 	blocklist, err := initLRU[ipblock.IPBlock, struct{}](
 		blocklistElems,
 		hashIPBlock,
-		blocklistTTL,
+		config.BlockTTL,
 		stop,
 		61*time.Second,
 	)
@@ -125,11 +126,11 @@ func NewInstanceState(pendingMaxMemUsage int64, blocklistMaxMemUsage int64, appr
 		return nil, 0, 0, 0, err
 	}
 
-	approvalElems := uint32(approvedMaxMemUsage / ApprovalItemCost) // #nosec G115 we trust config input
+	approvalElems := uint32(approvalMaxMemUsage / ApprovalItemCost) // #nosec G115 we trust config input
 	approval, err := initLRU[uuid.UUID, *atomic.Int32](
 		approvalElems,
 		hashUUID,
-		approvalTTL,
+		config.ApprovalTTL,
 		stop,
 		43*time.Second,
 	)
@@ -139,16 +140,9 @@ func NewInstanceState(pendingMaxMemUsage int64, blocklistMaxMemUsage int64, appr
 
 	usedNonce := initUsedNonce(stop, 41*time.Second)
 
-	pub, priv, err := ed25519.GenerateKey(nil)
-	if err != nil {
-		return nil, 0, 0, 0, err
-	}
-
-	fp := sha256.Sum256(priv.Seed())
+	fp := sha256.Sum256(config.ed25519Key.Seed())
 
 	return &InstanceState{
-		pub:       pub,
-		priv:      priv,
 		fp:        hex.EncodeToString(fp[:]),
 		pending:   pending,
 		blocklist: blocklist,
@@ -156,14 +150,6 @@ func NewInstanceState(pendingMaxMemUsage int64, blocklistMaxMemUsage int64, appr
 		usedNonce: usedNonce,
 		stop:      stop,
 	}, int64(pendingElems), int64(blocklistElems), int64(approvalElems), nil
-}
-
-func (s *InstanceState) GetPublicKey() ed25519.PublicKey {
-	return s.pub
-}
-
-func (s *InstanceState) GetPrivateKey() ed25519.PrivateKey {
-	return s.priv
 }
 
 func (s *InstanceState) GetFingerprint() string {

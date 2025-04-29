@@ -17,7 +17,10 @@ func (c *App) GetInstance() *core.Instance {
 }
 
 func (c *App) Provision(context caddy.Context) error {
-	c.Config.Provision()
+	err := c.Config.Provision(context.Logger())
+	if err != nil {
+		return err
+	}
 
 	context.Logger().Debug("cerberus instance provision")
 
