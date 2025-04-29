@@ -1,6 +1,7 @@
 package core
 
 import (
+	"crypto/ed25519"
 	"net"
 	"testing"
 	"time"
@@ -9,11 +10,18 @@ import (
 )
 
 func newTestState(t *testing.T) *InstanceState {
+	pub, priv, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		t.Fatalf("failed to generate ed25519 key: %v", err)
+	}
+
 	state, _, _, _, err := NewInstanceState(Config{
 		MaxMemUsage: 10 << 20,  // 10MB for pending
 		PendingTTL:  time.Hour, // 1 hour TTL for pending
 		BlockTTL:    time.Hour, // 1 hour TTL for blocklist
 		ApprovalTTL: time.Hour, // 1 hour TTL for approved
+		ed25519Pub:  pub,
+		ed25519Key:  priv,
 	})
 	if err != nil {
 		t.Fatalf("failed to create instance state: %v", err)
