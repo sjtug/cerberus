@@ -36,7 +36,7 @@
         ${wasm-pack} build --target web ./pow --no-default-features
       '';
       "js:bundle" = {
-        exec = "${pnpx} parcel build ./web/js/main.mjs --dist-dir ./web/dist/";
+        exec = "cd web/js && ${pnpx} parcel build --dist-dir ../dist/";
         after = [ "wasm:build" ];
       };
       "img:dist".exec = ''

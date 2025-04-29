@@ -1,0 +1,7 @@
+{
+    "name": "cerberus-js",
+    "version": "0.0.1",
+    "private": true,
+    "source": "main.mjs",
+    "browserslist": "last 2 versions, not dead, > 0.2%"
+}
