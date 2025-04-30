@@ -24,6 +24,21 @@ type Endpoint struct {
 	logger   *zap.Logger
 }
 
+func checkAnswer(s string, difficulty int) bool {
+	nibbles := difficulty / 2
+	remaining := difficulty % 2
+
+	if !strings.HasPrefix(s, strings.Repeat("0", nibbles)) {
+		return false
+	}
+
+	if remaining == 0 {
+		return true
+	}
+
+	return s[nibbles] < '8'
+}
+
 func (e *Endpoint) answerHandle(w http.ResponseWriter, r *http.Request) error {
 	c := e.instance
 
@@ -97,7 +112,7 @@ func (e *Endpoint) answerHandle(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	if !strings.HasPrefix(response, strings.Repeat("0", c.Difficulty)) {
+	if !checkAnswer(response, c.Difficulty) {
 		clearCookie(w, c.CookieName)
 		e.logger.Error("wrong response", zap.String("response", response), zap.Int("difficulty", c.Difficulty))
 		return respondFailure(w, r, &c.Config, "wrong response", false, http.StatusForbidden, ".")
