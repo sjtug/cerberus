@@ -6,7 +6,7 @@
 
 Cerberus guards the gates of open source infrastructure using a sha256 PoW challenge to protect them from unwanted traffic. It provides a Caddy handler that can be applied to existing Caddy servers.
 
-This project started as a Caddy port of [Anubis](https://github.com/TecharoHQ/anubis/) and is now a standalone project. While Anubis focuses on protecting websites from AI scrapers, Cerberus serves a different purpose: it's designed as a last line of defense to protect volunteer-run open source infrastructure from aggressive PCDN attacks. We would do whatever it takes to stop them, even if it means sacrificing a few innocent cats.
+This project started as a Caddy port of [Anubis](https://github.com/TecharoHQ/anubis/) and is now a standalone project. While Anubis focuses on protecting websites from AI scrapers, Cerberus serves a different purpose: it's designed as a last line of defense to protect volunteer-run open source infrastructure from abusive traffic. We would do whatever it takes to stop them, even if it means sacrificing a few innocent cats.
 
 For now, the project is still mostly a re-implementation of Anubis, but it's actively developed, and will eventually employ more aggressive techniques. You can check the [Roadmap](#roadmap) section for more details.
 
@@ -53,7 +53,7 @@ Check [Caddyfile](Caddyfile) for an example configuration.
 - [ ] Configurable challenge difficulty for each route
 - [ ] "block_only" mode to serve as a blocklist even a route is not protected by PoW challenge
 - [x] ~~RandomX PoW~~ unacceptably slow. Use blake3 (wasm) instead.
-- [ ] I18n
+- [x] I18n
 - [ ] Non-AI mascot
 
 ## Aggressive challenge policy

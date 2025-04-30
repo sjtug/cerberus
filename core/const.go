@@ -5,6 +5,6 @@ import "time"
 const (
 	AppName  = "cerberus"
 	VarName  = "cerberus-block"
-	Version  = "v0.3.1"
+	Version  = "v0.4.0"
 	NonceTTL = 2 * time.Minute
 )
