@@ -59,6 +59,17 @@ localhost {
 		base_url "/.cerberus"
 	}
 
+	@except_cerberus_endpoint {
+		not path /.cerberus/*
+	}
+
+	# Block bad IPs except for the cerberus endpoint.
+	cerberus @except_cerberus_endpoint {
+		base_url "/.cerberus"
+		# Cerberus in block only mode doesn't perform any challenge. It only blocks known bad IPs.
+		block_only
+	}
+
 	handle / {
 		respond "Hello, world!"
 	}

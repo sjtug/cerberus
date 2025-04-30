@@ -27,7 +27,15 @@ func (c *App) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 			}
 			c.Difficulty = difficulty
 		case "drop":
-			c.Drop = true
+			if !d.NextArg() {
+				c.Drop = true
+				continue
+			}
+			drop, ok := d.ScalarVal().(bool)
+			if !ok {
+				return d.Errf("drop must be a boolean")
+			}
+			c.Drop = drop
 		case "ed25519_key_file":
 			if !d.NextArg() {
 				return d.ArgErr()
@@ -193,6 +201,16 @@ func (m *Middleware) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 				return d.Errf("base_url must be a string")
 			}
 			m.BaseURL = baseURL
+		case "block_only":
+			if !d.NextArg() {
+				m.BlockOnly = true
+				continue
+			}
+			blockOnly, ok := d.ScalarVal().(bool)
+			if !ok {
+				return d.Errf("block_only must be a boolean")
+			}
+			m.BlockOnly = blockOnly
 		default:
 			return d.Errf("unknown subdirective '%s'", d.Val())
 		}
