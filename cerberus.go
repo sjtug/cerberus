@@ -1,12 +1,19 @@
 package cerberus
 
 import (
+	"embed"
+
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig/httpcaddyfile"
 	"github.com/sjtug/cerberus/directives"
 )
 
+//go:embed translations
+var translations embed.FS
+
 func init() {
+	directives.LoadI18n(translations)
+
 	caddy.RegisterModule(directives.App{})
 	caddy.RegisterModule(directives.Middleware{})
 	caddy.RegisterModule(directives.Endpoint{})

@@ -11,6 +11,7 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/invopop/ctxi18n"
 	"github.com/sjtug/cerberus/core"
 	"github.com/sjtug/cerberus/web"
 	"github.com/zeebo/blake3"
@@ -97,7 +98,7 @@ func calcSignature(challenge string, nonce uint32, ts int64, c *core.Instance) s
 	return hex.EncodeToString(signature)
 }
 
-func respondFailure(w http.ResponseWriter, r *http.Request, c *core.Config, msg string, blocked bool, status int, baseURL string) {
+func respondFailure(w http.ResponseWriter, r *http.Request, c *core.Config, msg string, blocked bool, status int, baseURL string) error {
 	if blocked {
 		if c.Drop {
 			// Drop the connection
@@ -111,12 +112,35 @@ func respondFailure(w http.ResponseWriter, r *http.Request, c *core.Config, msg 
 		w.Header().Set(c.HeaderName, "FAIL")
 	}
 
-	ctx := templ.WithChildren(
-		context.WithValue(context.WithValue(r.Context(), web.BaseURLCtxKey, baseURL), web.VersionCtxKey, core.Version),
-		web.Error(msg, c.Mail),
+	return renderTemplate(w, r, c, baseURL, web.Error(msg, c.Mail), templ.WithStatus(status))
+}
+
+func renderTemplate(w http.ResponseWriter, r *http.Request, c *core.Config, baseURL string, child templ.Component, opts ...func(*templ.ComponentHandler)) error {
+	locale := r.Header.Get("Accept-Language")
+	if locale == "" {
+		locale = "en"
+	}
+
+	ctx, err := ctxi18n.WithLocale(r.Context(), locale)
+	if err != nil {
+		return err
+	}
+
+	ctx = templ.WithChildren(
+		context.WithValue(
+			context.WithValue(
+				context.WithValue(ctx, web.BaseURLCtxKey, baseURL),
+				web.VersionCtxKey,
+				core.Version,
+			),
+			web.LocaleCtxKey,
+			locale,
+		),
+		child,
 	)
 	templ.Handler(
 		web.Base(c.Title),
-		templ.WithStatus(status),
+		opts...,
 	).ServeHTTP(w, r.WithContext(ctx))
+	return nil
 }

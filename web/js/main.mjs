@@ -13,7 +13,8 @@ function t(key, props) {
 
 const meta = {
   baseURL: "",
-  version: ""
+  version: "",
+  locale: ""
 }
 
 const dom = {
@@ -69,11 +70,15 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
 
   const thisScript = document.getElementById('challenge-script');
   const { challenge, difficulty, nonce: inputNonce, ts, signature } = JSON.parse(thisScript.getAttribute('x-challenge'));
-  const { baseURL, version } = JSON.parse(thisScript.getAttribute('x-meta'));
+  const { baseURL, version, locale } = JSON.parse(thisScript.getAttribute('x-meta'));
 
   // Initialize UI
   meta.baseURL = baseURL;
   meta.version = version;
+  meta.locale = locale;
+
+  // Set locale
+  messages.locale = locale;
 
   // Set initial checking state
   ui.title(t('challenge.title'));

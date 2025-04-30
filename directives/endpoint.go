@@ -30,59 +30,50 @@ func (e *Endpoint) answerHandle(w http.ResponseWriter, r *http.Request) error {
 	nonceStr := r.FormValue("nonce")
 	if nonceStr == "" {
 		e.logger.Info("nonce is empty")
-		respondFailure(w, r, &c.Config, "nonce is empty", false, http.StatusBadRequest, ".")
-		return nil
+		return respondFailure(w, r, &c.Config, "nonce is empty", false, http.StatusBadRequest, ".")
 	}
 	nonce64, err := strconv.ParseUint(nonceStr, 10, 32)
 	if err != nil {
 		e.logger.Debug("nonce is not an integer", zap.Error(err))
-		respondFailure(w, r, &c.Config, "nonce is not an integer", false, http.StatusBadRequest, ".")
-		return nil
+		return respondFailure(w, r, &c.Config, "nonce is not an integer", false, http.StatusBadRequest, ".")
 	}
 	nonce := uint32(nonce64)
 	if !c.InsertUsedNonce(nonce) {
 		e.logger.Info("nonce already used")
-		respondFailure(w, r, &c.Config, "nonce already used", false, http.StatusBadRequest, ".")
-		return nil
+		return respondFailure(w, r, &c.Config, "nonce already used", false, http.StatusBadRequest, ".")
 	}
 
 	tsStr := r.FormValue("ts")
 	if tsStr == "" {
 		e.logger.Info("ts is empty")
-		respondFailure(w, r, &c.Config, "ts is empty", false, http.StatusBadRequest, ".")
-		return nil
+		return respondFailure(w, r, &c.Config, "ts is empty", false, http.StatusBadRequest, ".")
 	}
 	ts, err := strconv.ParseInt(tsStr, 10, 64)
 	if err != nil {
 		e.logger.Debug("ts is not a integer", zap.Error(err))
-		respondFailure(w, r, &c.Config, "ts is not a integer", false, http.StatusBadRequest, ".")
-		return nil
+		return respondFailure(w, r, &c.Config, "ts is not a integer", false, http.StatusBadRequest, ".")
 	}
 	now := time.Now().Unix()
 	if ts < now-int64(core.NonceTTL) || ts > now {
 		e.logger.Info("invalid ts", zap.Int64("ts", ts), zap.Int64("now", now))
-		respondFailure(w, r, &c.Config, "invalid ts", false, http.StatusBadRequest, ".")
-		return nil
+		return respondFailure(w, r, &c.Config, "invalid ts", false, http.StatusBadRequest, ".")
 	}
 
 	signature := r.FormValue("signature")
 	if signature == "" {
 		e.logger.Info("signature is empty")
-		respondFailure(w, r, &c.Config, "signature is empty", false, http.StatusBadRequest, ".")
-		return nil
+		return respondFailure(w, r, &c.Config, "signature is empty", false, http.StatusBadRequest, ".")
 	}
 
 	solutionStr := r.FormValue("solution")
 	if solutionStr == "" {
 		e.logger.Info("solution is empty")
-		respondFailure(w, r, &c.Config, "solution is empty", false, http.StatusBadRequest, ".")
-		return nil
+		return respondFailure(w, r, &c.Config, "solution is empty", false, http.StatusBadRequest, ".")
 	}
 	solution, err := strconv.Atoi(solutionStr)
 	if err != nil {
 		e.logger.Debug("solution is not a integer", zap.Error(err))
-		respondFailure(w, r, &c.Config, "solution is not a integer", false, http.StatusBadRequest, ".")
-		return nil
+		return respondFailure(w, r, &c.Config, "solution is not a integer", false, http.StatusBadRequest, ".")
 	}
 
 	response := r.FormValue("response")
@@ -97,8 +88,7 @@ func (e *Endpoint) answerHandle(w http.ResponseWriter, r *http.Request) error {
 	expectedSignature := calcSignature(challenge, nonce, ts, c)
 	if signature != expectedSignature {
 		e.logger.Debug("signature mismatch", zap.String("expected", expectedSignature), zap.String("actual", signature))
-		respondFailure(w, r, &c.Config, "signature mismatch", false, http.StatusForbidden, ".")
-		return nil
+		return respondFailure(w, r, &c.Config, "signature mismatch", false, http.StatusForbidden, ".")
 	}
 
 	answer, err := blake3sum(fmt.Sprintf("%s|%d|%d|%s|%d", challenge, nonce, ts, signature, solution))
@@ -110,15 +100,13 @@ func (e *Endpoint) answerHandle(w http.ResponseWriter, r *http.Request) error {
 	if !strings.HasPrefix(response, strings.Repeat("0", c.Difficulty)) {
 		clearCookie(w, c.CookieName)
 		e.logger.Error("wrong response", zap.String("response", response), zap.Int("difficulty", c.Difficulty))
-		respondFailure(w, r, &c.Config, "wrong response", false, http.StatusForbidden, ".")
-		return nil
+		return respondFailure(w, r, &c.Config, "wrong response", false, http.StatusForbidden, ".")
 	}
 
 	if subtle.ConstantTimeCompare([]byte(answer), []byte(response)) != 1 {
 		clearCookie(w, c.CookieName)
 		e.logger.Error("response mismatch", zap.String("expected", answer), zap.String("actual", response))
-		respondFailure(w, r, &c.Config, "response mismatch", false, http.StatusForbidden, ".")
-		return nil
+		return respondFailure(w, r, &c.Config, "response mismatch", false, http.StatusForbidden, ".")
 	}
 
 	// Now we know the user passed the challenge, we issue an approval and sign the result.
@@ -191,8 +179,7 @@ func (e *Endpoint) ServeHTTP(w http.ResponseWriter, r *http.Request, _ caddyhttp
 		return e.answerHandle(w, r)
 	}
 
-	respondFailure(w, r, &c.Config, "Not found", false, http.StatusNotFound, ".")
-	return nil
+	return respondFailure(w, r, &c.Config, "Not found", false, http.StatusNotFound, ".")
 }
 
 func (e *Endpoint) Provision(ctx caddy.Context) error {

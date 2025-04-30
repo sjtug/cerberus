@@ -1,13 +1,26 @@
 package web
 
-import "context"
+import (
+	"context"
+
+	"github.com/invopop/ctxi18n/i18n"
+)
 
 type contextKeyType int
 
 const (
 	BaseURLCtxKey contextKeyType = iota
 	VersionCtxKey
+	LocaleCtxKey
 )
+
+templ T(key string, args ...any) {
+	{ i18n.T(ctx, key, args...) }
+}
+
+templ UnsafeT(key string, args ...any) {
+	@templ.Raw(i18n.T(ctx, key, args...))
+}
 
 func GetBaseURL(ctx context.Context) string {
 	return ctx.Value(BaseURLCtxKey).(string)
@@ -15,6 +28,10 @@ func GetBaseURL(ctx context.Context) string {
 
 func GetVersion(ctx context.Context) string {
 	return ctx.Value(VersionCtxKey).(string)
+}
+
+func GetLocale(ctx context.Context) string {
+	return ctx.Value(LocaleCtxKey).(string)
 }
 
 templ Base(title string) {
@@ -31,14 +48,14 @@ templ Base(title string) {
 				<h1 id="title" class="text-3xl font-bold mb-6 font-['Roboto_Slab']">{ title }</h1>
 				{ children... }
 				<p class="text-gray-700 mb-2">
-					Protected by 
-					<a href="https://github.com/SJTUG/cerberus" class="text-pink-600 hover:text-pink-700">Cerberus</a>
-					from 
-					<a href="https://sjtug.org" class="text-pink-600 hover:text-pink-700">SJTUG</a>. 
-					Made with ❤️ across the 🌏.
+					@UnsafeT("footer.author", i18n.M{
+						"cerberus": `<a href="https://github.com/SJTUG/cerberus" class="text-pink-600 hover:text-pink-700">Cerberus</a>`,
+						"sjtug":    `<a href="https://sjtug.org" class="text-pink-600 hover:text-pink-700">SJTUG</a>`})
 				</p>
 				<p class="text-gray-700 text-sm">
-					Heavily inspired by <a href="https://github.com/TecharoHQ/anubis" class="text-pink-600 hover:text-pink-700">Anubis</a> from <a href="https://techaro.lol" class="text-pink-600 hover:text-pink-700">Techaro</a> in 🇨🇦.
+					@UnsafeT("footer.upstream", i18n.M{
+						"anubis":  `<a href="https://github.com/TecharoHQ/anubis" class="text-pink-600 hover:text-pink-700">Anubis</a>`,
+						"techaro": `<a href="https://techaro.lol" class="text-pink-600 hover:text-pink-700">Techaro</a>`})
 				</p>
 			</div>
 		</body>
@@ -57,10 +74,12 @@ templ Challenge(challenge string, difficulty int, nonce uint32, ts int64, signat
 
 		baseURL := GetBaseURL(ctx)
 		version := GetVersion(ctx)
+		locale := GetLocale(ctx)
 		metaInput := struct {
 			BaseURL string `json:"baseURL"`
 			Version string `json:"version"`
-		}{baseURL, version}
+			Locale  string `json:"locale"`
+		}{baseURL, version, locale}
 
 		relPath := func(path string) string {
 			return baseURL + path + "?v=" + version
@@ -77,30 +96,31 @@ templ Challenge(challenge string, difficulty int, nonce uint32, ts int64, signat
 		</div>
 	</div>
 	<details class="mb-4">
-		<summary class="cursor-pointer text-gray-600 hover:text-gray-800">Why am I seeing this?</summary>
+		<summary class="cursor-pointer text-gray-600 hover:text-gray-800">
+			@T("challenge.why_seeing")
+		</summary>
 		<div class="mt-2 text-sm text-gray-600 space-y-2">
 			<p>
-				You are seeing this because the administrator of this website has set up <a
-	href="https://github.com/SJTUG/cerberus"
-	class="text-pink-600 hover:text-pink-700"
->Cerberus</a> to protect the server against the scourge of PCDN attacks. This can and does cause downtime for the websites, which makes their
-				resources inaccessible for everyone.
+				@UnsafeT("challenge.why_seeing_body.part_1", i18n.M{
+					"cerberus": `<a href="https://github.com/SJTUG/cerberus" class="text-pink-600 hover:text-pink-700">Cerberus</a>`,
+				})
 			</p>
 			<p>
-				If you're familiar with <a href="https://github.com/TecharoHQ/anubis" class="text-pink-600 hover:text-pink-700">Anubis</a> by <a href="https://techaro.lol" class="text-pink-600 hover:text-pink-700">Techaro</a>, Cerberus is similar - it's a port of Anubis built for Caddy. But while Anubis focuses on protecting websites from AI scrapers, Cerberus serves a different purpose: it's designed as a last line of defense to protect volunteer-run open source infrastructure from aggressive PCDN attacks.
+				@UnsafeT("challenge.why_seeing_body.part_2", i18n.M{
+					"anubis":  `<a href="https://github.com/TecharoHQ/anubis" class="text-pink-600 hover:text-pink-700">Anubis</a>`,
+					"techaro": `<a href="https://techaro.lol" class="text-pink-600 hover:text-pink-700">Techaro</a>`,
+				})
 			</p>
 			<p>
-				Please note that Cerberus requires the use of modern JavaScript features that plugins like <a
-	href="https://jshelter.org/"
-	class="text-pink-600 hover:text-pink-700"
->JShelter</a> will disable. Please disable JShelter or other such
-				plugins for this domain.
+				@UnsafeT("challenge.why_seeing_body.part_3", i18n.M{
+					"jshelter": `<a href="https://jshelter.org/" class="text-pink-600 hover:text-pink-700">JShelter</a>`,
+				})
 			</p>
 		</div>
 	</details>
 	<noscript>
 		<p>
-			You must enable JavaScript to get past this challenge.
+			@T("challenge.must_enable_js")
 		</p>
 	</noscript>
 	<script async defer id="challenge-script" x-meta={ templ.JSONString(metaInput) } x-challenge={ templ.JSONString(challengeInput) } src={ relPath("/static/main.js") }></script>
@@ -108,10 +128,16 @@ templ Challenge(challenge string, difficulty int, nonce uint32, ts int64, signat
 
 templ Error(message string, mail string) {
 	<img id="mascot" src={ GetBaseURL(ctx) + "/static/img/mascot-fail.png?v=" + GetVersion(ctx) } alt="Cute anime mascot character with a sad face" class="mx-auto mb-6 p-6"/>
-	<p id="description" class="text-gray-700 mb-2">An error occurred while processing your request.</p>
+	<p id="description" class="text-gray-700 mb-2">
+		@T("error.error_occurred")
+	</p>
 	<p id="message" class="text-gray-700 mb-2">{ message }</p>
-	<button id="refresh-button" class="bg-teal-400 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition-colors" onClick="window.history.back();">Try again</button>
+	<button id="refresh-button" class="bg-teal-400 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition-colors" onClick="window.history.back();">
+		@T("error.try_again")
+	</button>
 	if mail != "" {
-		<p class="text-gray-700 mb-2">If you believe this is an error, please contact us at <a href={ "mailto:" + templ.SafeURL(mail) } class="text-pink-600 hover:text-pink-700">{ mail }</a>.</p>
+		<p class="text-gray-700 mb-2">
+			@UnsafeT("error.contact_us", i18n.M{"mail": `<a href="mailto:` + mail + `" class="text-pink-600 hover:text-pink-700">` + mail + `</a>`})
+		</p>
 	}
 }
