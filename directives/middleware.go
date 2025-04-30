@@ -23,6 +23,8 @@ import (
 type Middleware struct {
 	// The base URL for the challenge. It must be the same as the deployed endpoint route.
 	BaseURL string `json:"base_url,omitempty"`
+	// If true, the middleware will not perform any challenge. It will only block known bad IPs.
+	BlockOnly bool `json:"block_only,omitempty"`
 
 	instance *core.Instance
 	logger   *zap.Logger
@@ -85,8 +87,15 @@ func (m *Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next cadd
 		caddyhttp.SetVar(r.Context(), core.VarName, ipBlock)
 		if c.ContainsBlocklist(ipBlock) {
 			m.logger.Debug("IP is blocked", zap.String("ip", ipBlock.ToIPNet(c.PrefixCfg).String()))
-			return respondFailure(w, r, &c.Config, "IP blocked", true, http.StatusForbidden, m.BaseURL)
+			return respondFailure(w, r, &c.Config, "", true, http.StatusForbidden, m.BaseURL)
 		}
+	}
+
+	if m.BlockOnly {
+		// If block only mode is enabled, we don't need to perform any challenge.
+		// Continue to the next handler.
+		w.Header().Set(c.HeaderName, "DISABLED")
+		return next.ServeHTTP(w, r)
 	}
 
 	// Get the "cerberus-auth" cookie
