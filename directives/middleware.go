@@ -11,6 +11,7 @@ import (
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/invopop/ctxi18n/i18n"
 	"github.com/sjtug/cerberus/core"
 	"github.com/sjtug/cerberus/internal/ipblock"
 	"github.com/sjtug/cerberus/internal/randpool"
@@ -69,10 +70,15 @@ func (m *Middleware) invokeAuth(w http.ResponseWriter, r *http.Request) error {
 	ts := time.Now().Unix()
 	signature := calcSignature(challenge, nonce, ts, c)
 
-	return renderTemplate(w, r, &c.Config, m.BaseURL, web.Challenge(challenge, c.Difficulty, nonce, ts, signature))
+	return renderTemplate(w, r, &c.Config, m.BaseURL, i18n.T(r.Context(), "challenge.title"), web.Challenge(challenge, c.Difficulty, nonce, ts, signature))
 }
 
 func (m *Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
+	r, err := setupLocale(r)
+	if err != nil {
+		return err
+	}
+
 	c := m.instance
 
 	if ipBlock, err := ipblock.NewIPBlock(net.ParseIP(getClientIP(r)), c.PrefixCfg); err == nil {

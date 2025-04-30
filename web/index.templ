@@ -34,7 +34,7 @@ func GetLocale(ctx context.Context) string {
 	return ctx.Value(LocaleCtxKey).(string)
 }
 
-templ Base(title string) {
+templ Base(title string, header string) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
@@ -45,7 +45,7 @@ templ Base(title string) {
 		</head>
 		<body class="min-h-screen flex flex-col items-center justify-center p-4 bg-[#fff8e7]">
 			<div class="text-center text-lg max-w-2xl w-full px-4">
-				<h1 id="title" class="text-4xl font-bold mb-6">{ title }</h1>
+				<h1 id="title" class="text-4xl font-bold mb-6">{ header }</h1>
 				{ children... }
 				<p class="text-gray-700 mb-2">
 					@UnsafeT("footer.author", i18n.M{
@@ -126,15 +126,10 @@ templ Challenge(challenge string, difficulty int, nonce uint32, ts int64, signat
 	<script async defer id="challenge-script" x-meta={ templ.JSONString(metaInput) } x-challenge={ templ.JSONString(challengeInput) } src={ relPath("/static/main.js") }></script>
 }
 
-templ Error(message string, mail string) {
+templ Error(message string, description string, mail string) {
 	<img id="mascot" src={ GetBaseURL(ctx) + "/static/img/mascot-fail.png?v=" + GetVersion(ctx) } alt="Cute anime mascot character with a sad face" class="mx-auto p-4 mb-2 max-w-64"/>
-	<p id="description" class="text-gray-700 mb-2">
-		@T("error.error_occurred")
-	</p>
 	<p id="message" class="text-gray-700 mb-2">{ message }</p>
-	<button id="retry-button" class="cursor-pointer bg-amber-400 text-white px-4 py-1 rounded-sm hover:bg-amber-500 transition-colors my-2" onClick="window.history.back();">
-		@T("error.try_again")
-	</button>
+	<p id="description" class="text-gray-700 mb-4">{ description }</p>
 	if mail != "" {
 		<p class="text-gray-700 mb-4">
 			@UnsafeT("error.contact_us", i18n.M{"mail": `<a href="mailto:` + mail + `" class="text-amber-600 hover:text-amber-700">` + mail + `</a>`})
