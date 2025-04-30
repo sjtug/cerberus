@@ -11,6 +11,8 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/invopop/ctxi18n"
+	"github.com/invopop/ctxi18n/i18n"
 	"github.com/sjtug/cerberus/core"
 	"github.com/sjtug/cerberus/web"
 	"github.com/zeebo/blake3"
@@ -97,7 +99,7 @@ func calcSignature(challenge string, nonce uint32, ts int64, c *core.Instance) s
 	return hex.EncodeToString(signature)
 }
 
-func respondFailure(w http.ResponseWriter, r *http.Request, c *core.Config, msg string, blocked bool, status int, baseURL string) {
+func respondFailure(w http.ResponseWriter, r *http.Request, c *core.Config, msg string, blocked bool, status int, baseURL string) error {
 	if blocked {
 		if c.Drop {
 			// Drop the connection
@@ -107,16 +109,56 @@ func respondFailure(w http.ResponseWriter, r *http.Request, c *core.Config, msg 
 		// Close the connection to the client
 		r.Close = true
 		w.Header().Set("Connection", "close")
-	} else {
-		w.Header().Set(c.HeaderName, "FAIL")
+		return renderTemplate(w, r, c, baseURL,
+			i18n.T(r.Context(), "error.access_restricted"),
+			web.Error(
+				i18n.T(r.Context(), "error.ip_blocked"),
+				i18n.T(r.Context(), "error.wait_before_retry"),
+				c.Mail,
+			),
+			templ.WithStatus(status),
+		)
 	}
 
+	return renderTemplate(w, r, c, baseURL,
+		i18n.T(r.Context(), "error.error_occurred"),
+		web.Error(
+			msg,
+			i18n.T(r.Context(), "error.browser_config_or_bug"),
+			c.Mail,
+		),
+		templ.WithStatus(status),
+	)
+}
+
+func setupLocale(r *http.Request) (*http.Request, error) {
+	locale := r.Header.Get("Accept-Language")
+	if locale == "" {
+		locale = "en"
+	}
+
+	ctx, err := ctxi18n.WithLocale(r.Context(), locale)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx = context.WithValue(ctx, web.LocaleCtxKey, locale)
+
+	return r.WithContext(ctx), nil
+}
+
+func renderTemplate(w http.ResponseWriter, r *http.Request, c *core.Config, baseURL string, header string, child templ.Component, opts ...func(*templ.ComponentHandler)) error {
 	ctx := templ.WithChildren(
-		context.WithValue(context.WithValue(r.Context(), web.BaseURLCtxKey, baseURL), web.VersionCtxKey, core.Version),
-		web.Error(msg, c.Mail),
+		context.WithValue(
+			context.WithValue(r.Context(), web.BaseURLCtxKey, baseURL),
+			web.VersionCtxKey,
+			core.Version,
+		),
+		child,
 	)
 	templ.Handler(
-		web.Base(c.Title),
-		templ.WithStatus(status),
+		web.Base(c.Title, header),
+		opts...,
 	).ServeHTTP(w, r.WithContext(ctx))
+	return nil
 }

@@ -9,11 +9,14 @@ require (
 	github.com/caddyserver/caddy/v2 v2.10.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/golang-jwt/jwt/v5 v5.2.2
+	github.com/invopop/ctxi18n v0.9.0
 	github.com/zeebo/xxh3 v1.0.2
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.37.0
 	pgregory.net/rapid v1.2.0
 )
+
+require github.com/invopop/yaml v0.2.0 // indirect
 
 require (
 	cel.dev/expr v0.23.1 // indirect

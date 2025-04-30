@@ -1,18 +1,17 @@
 package directives
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net"
 	"net/http"
 	"time"
 
-	"github.com/a-h/templ"
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/invopop/ctxi18n/i18n"
 	"github.com/sjtug/cerberus/core"
 	"github.com/sjtug/cerberus/internal/ipblock"
 	"github.com/sjtug/cerberus/internal/randpool"
@@ -55,8 +54,7 @@ func (m *Middleware) invokeAuth(w http.ResponseWriter, r *http.Request) error {
 			c.InsertBlocklist(ipBlock)
 			c.RemovePending(ipBlock)
 
-			respondFailure(w, r, &c.Config, "IP blocked", true, http.StatusForbidden, m.BaseURL)
-			return nil
+			return respondFailure(w, r, &c.Config, "IP blocked", true, http.StatusForbidden, m.BaseURL)
 		}
 	}
 
@@ -72,26 +70,22 @@ func (m *Middleware) invokeAuth(w http.ResponseWriter, r *http.Request) error {
 	ts := time.Now().Unix()
 	signature := calcSignature(challenge, nonce, ts, c)
 
-	ctx := templ.WithChildren(
-		context.WithValue(context.WithValue(r.Context(), web.BaseURLCtxKey, m.BaseURL), web.VersionCtxKey, core.Version),
-		web.Challenge(challenge, c.Difficulty, nonce, ts, signature),
-	)
-	templ.Handler(
-		web.Base(c.Title),
-	).ServeHTTP(w, r.WithContext(ctx))
-
-	return nil
+	return renderTemplate(w, r, &c.Config, m.BaseURL, i18n.T(r.Context(), "challenge.title"), web.Challenge(challenge, c.Difficulty, nonce, ts, signature))
 }
 
 func (m *Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
+	r, err := setupLocale(r)
+	if err != nil {
+		return err
+	}
+
 	c := m.instance
 
 	if ipBlock, err := ipblock.NewIPBlock(net.ParseIP(getClientIP(r)), c.PrefixCfg); err == nil {
 		caddyhttp.SetVar(r.Context(), core.VarName, ipBlock)
 		if c.ContainsBlocklist(ipBlock) {
 			m.logger.Debug("IP is blocked", zap.String("ip", ipBlock.ToIPNet(c.PrefixCfg).String()))
-			respondFailure(w, r, &c.Config, "IP blocked", true, http.StatusForbidden, m.BaseURL)
-			return nil
+			return respondFailure(w, r, &c.Config, "IP blocked", true, http.StatusForbidden, m.BaseURL)
 		}
 	}
 
