@@ -1,8 +1,8 @@
-mod check_nibble;
+mod check_dubit;
 mod utils;
 
 use blake3::Hasher;
-use check_nibble::check_leading_zero_nibbles;
+use check_dubit::check_leading_zero_dubits;
 use serde::Serialize;
 use utils::set_panic_hook;
 use wasm_bindgen::prelude::*;
@@ -30,7 +30,7 @@ fn start() {
 pub fn process_task(data: &str, difficulty: u32, thread_id: u32, threads: u32) {
     let worker = worker_global_scope();
 
-    let nibble_checker = check_leading_zero_nibbles(difficulty as usize);
+    let dubit_checker = check_leading_zero_dubits(difficulty as usize);
 
     let mut hasher = Hasher::new();
 
@@ -41,7 +41,7 @@ pub fn process_task(data: &str, difficulty: u32, thread_id: u32, threads: u32) {
         hasher.update(attempt.as_bytes());
         let hash = hasher.finalize();
 
-        if nibble_checker(hash.as_bytes(), difficulty as usize) {
+        if dubit_checker(hash.as_bytes(), difficulty as usize) {
             let resp = Resp {
                 hash: hex::encode(hash.as_bytes()),
                 data: attempt,

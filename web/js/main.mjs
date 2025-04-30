@@ -91,7 +91,7 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
   const t0 = Date.now();
   let lastUpdate = 0;
 
-  const likelihood = Math.pow(16, -difficulty);
+  const likelihood = Math.pow(16, -difficulty/2);
 
   const mergedChallenge = `${challenge}|${inputNonce}|${ts}|${signature}|`;
   const { hash, nonce: solution } = await pow(mergedChallenge, difficulty, null, (iters) => {
@@ -103,11 +103,11 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
     const probability = Math.pow(1 - likelihood, iters);
     const distance = (1 - Math.pow(probability, 2)) * 100;
 
-    // Update progress every 100ms
+    // Update progress every 200ms
     const now = Date.now();
     const delta = now - t0;
 
-    if (delta - lastUpdate > 100) {
+    if (delta - lastUpdate > 200) {
       const speed = iters / delta;
       ui.progress(distance);
       ui.metrics(t('challenge.difficulty_speed', { difficulty, speed: speed.toFixed(3) }));
