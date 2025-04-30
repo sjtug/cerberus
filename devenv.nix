@@ -37,17 +37,19 @@
       "wasm:build".exec = ''
         ${wasm-pack} build --target web ./pow --no-default-features
       '';
-      "js:install".exec = ''
-        cd web/js
-        ${pnpm} install
-      '';
+      "js:install" = {
+        exec = ''
+          cd web/js
+          ${pnpm} install
+        '';
+        after = [ "wasm:build" ];
+      };
       "js:bundle" = {
         exec = ''
           cd web/js
           ${pnpx} parcel build --dist-dir ../dist/
         '';
         after = [
-          "wasm:build"
           "js:install"
           "js:icu"
         ];
