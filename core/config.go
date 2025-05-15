@@ -37,6 +37,8 @@ type Config struct {
 	Drop bool `json:"drop,omitempty"`
 	// Ed25519 signing key file path. If not provided, a new key will be generated.
 	Ed25519KeyFile string `json:"ed25519_key_file,omitempty"`
+	// Ed25519 signing key content. If not provided, a new key will be generated.
+	Ed25519Key string `json:"ed25519_key,omitempty"`
 	// MaxPending is the maximum number of pending (and failed) requests.
 	// Any IP block (prefix configured in prefix_cfg) with more than this number of pending requests will be blocked.
 	MaxPending int32 `json:"max_pending,omitempty"`
@@ -103,12 +105,18 @@ func (c *Config) Provision(logger *zap.Logger) error {
 		}
 	}
 
-	if c.Ed25519KeyFile != "" {
-		logger.Info("loading ed25519 key from file", zap.String("path", c.Ed25519KeyFile))
+	if c.Ed25519KeyFile != "" || c.Ed25519Key != "" {
+		var raw []byte
+		var err error
+		if c.Ed25519KeyFile != "" {
+			logger.Info("loading ed25519 key from file", zap.String("path", c.Ed25519KeyFile))
 
-		raw, err := os.ReadFile(c.Ed25519KeyFile)
-		if err != nil {
-			return fmt.Errorf("failed to read ed25519 key file: %w", err)
+			raw, err = os.ReadFile(c.Ed25519KeyFile)
+			if err != nil {
+				return fmt.Errorf("failed to read ed25519 key file: %w", err)
+			}
+		} else {
+			raw = []byte(c.Ed25519Key)
 		}
 
 		c.ed25519Key, err = LoadEd25519Key(raw)
@@ -150,6 +158,9 @@ func (c *Config) Validate() error {
 	}
 	if c.MaxMemUsage < 1 {
 		return errors.New("max_mem_usage must be at least 1")
+	}
+	if c.Ed25519KeyFile != "" && c.Ed25519Key != "" {
+		return errors.New("ed25519_key_file and ed25519_key cannot both be set")
 	}
 	if err := ipblock.ValidateConfig(c.PrefixCfg); err != nil {
 		return fmt.Errorf("prefix_cfg: %w", err)
