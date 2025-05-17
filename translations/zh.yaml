@@ -24,7 +24,7 @@ zh:
     browser_config_or_bug: "可能是浏览器配置问题，也可能是我们的系统出现了异常"
     ip_blocked: "由于检测到可疑活动，您的 IP 地址或本地网络已被封禁"
     wait_before_retry: "请稍后再试，某些情况下可能需要等待数小时"
-    contact_us: "如有问题，请通过 %{mail} 联系我们"
+    contact_us: "如有问题，请通过 %{mail} 联系我们。请附上下方显示的 request ID，以便我们进行排查。"
   footer:
     author: "由 %{sjtug} 开发的 %{cerberus} 提供保护"
     upstream: "灵感来源于 🇨🇦 %{techaro} 开发的 %{anubis}"

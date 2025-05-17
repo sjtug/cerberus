@@ -25,7 +25,7 @@ export default {
       browser_config_or_bug: () => "可能是浏览器配置问题，也可能是我们的系统出现了异常",
       ip_blocked: () => "由于检测到可疑活动，您的 IP 地址或本地网络已被封禁",
       wait_before_retry: () => "请稍后再试，某些情况下可能需要等待数小时",
-      contact_us: (d) => "如有问题，请通过 " + d.mail + " 联系我们"
+      contact_us: (d) => "如有问题，请通过 " + d.mail + " 联系我们。请附上下方显示的 request ID，以便我们进行排查。"
     },
     footer: {
       author: (d) => "由 " + d.sjtug + " 开发的 " + d.cerberus + " 提供保护",
@@ -57,7 +57,7 @@ export default {
       browser_config_or_bug: () => "There might be an issue with your browser configuration, or something is wrong on our side.",
       ip_blocked: () => "You (or your local network) have been blocked due to suspicious activity.",
       wait_before_retry: () => "Please wait a while before you try again; in some cases this may take a few hours.",
-      contact_us: (d) => "If you believe this is an error, please contact us at " + d.mail + "."
+      contact_us: (d) => "If you believe this is an error, please contact us at " + d.mail + ". Attach the request ID shown below to help us investigate."
     },
     footer: {
       author: (d) => "Protected by " + d.cerberus + " from " + d.sjtug + ".",

@@ -150,12 +150,13 @@ func (e *Endpoint) answerHandle(w http.ResponseWriter, r *http.Request) error {
 
 	e.logger.Debug("user passed the challenge")
 
-	ipBlockRaw := caddyhttp.GetVar(r.Context(), core.VarName)
+	ipBlockRaw := caddyhttp.GetVar(r.Context(), core.VarIPBlock)
 	if ipBlockRaw != nil {
 		ipBlock := ipBlockRaw.(ipblock.IPBlock)
 		c.DecPending(ipBlock)
 	}
 
+	w.Header().Set(c.HeaderName, "PASS")
 	http.Redirect(w, r, redir, http.StatusSeeOther)
 	return nil
 }
@@ -183,6 +184,7 @@ func tryServeFile(w http.ResponseWriter, r *http.Request) bool {
 }
 
 func (e *Endpoint) ServeHTTP(w http.ResponseWriter, r *http.Request, _ caddyhttp.Handler) error {
+	r = setupRequestID(r)
 	r, err := setupLocale(r)
 	if err != nil {
 		return err

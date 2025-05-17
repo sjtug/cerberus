@@ -10,7 +10,9 @@ import (
 	"time"
 
 	"github.com/a-h/templ"
+	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/invopop/ctxi18n"
 	"github.com/invopop/ctxi18n/i18n"
 	"github.com/sjtug/cerberus/core"
@@ -105,7 +107,7 @@ func respondFailure(w http.ResponseWriter, r *http.Request, c *core.Config, msg 
 			// Drop the connection
 			panic(http.ErrAbortHandler)
 		}
-		w.Header().Set(c.HeaderName, "BLOCK")
+		w.Header().Set(c.HeaderName, "BLOCKED")
 		// Close the connection to the client
 		r.Close = true
 		w.Header().Set("Connection", "close")
@@ -120,6 +122,7 @@ func respondFailure(w http.ResponseWriter, r *http.Request, c *core.Config, msg 
 		)
 	}
 
+	w.Header().Set(c.HeaderName, "FAIL")
 	return renderTemplate(w, r, c, baseURL,
 		i18n.T(r.Context(), "error.error_occurred"),
 		web.Error(
@@ -145,6 +148,12 @@ func setupLocale(r *http.Request) (*http.Request, error) {
 	ctx = context.WithValue(ctx, web.LocaleCtxKey, locale)
 
 	return r.WithContext(ctx), nil
+}
+
+func setupRequestID(r *http.Request) *http.Request {
+	id := uuid.New().String()
+	caddyhttp.SetVar(r.Context(), core.VarReqID, id)
+	return r
 }
 
 func renderTemplate(w http.ResponseWriter, r *http.Request, c *core.Config, baseURL string, header string, child templ.Component, opts ...func(*templ.ComponentHandler)) error {

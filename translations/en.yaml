@@ -23,7 +23,7 @@ en:
     browser_config_or_bug: "There might be an issue with your browser configuration, or something is wrong on our side."
     ip_blocked: "You (or your local network) have been blocked due to suspicious activity."
     wait_before_retry: "Please wait a while before you try again; in some cases this may take a few hours."
-    contact_us: "If you believe this is an error, please contact us at %{mail}."
+    contact_us: "If you believe this is an error, please contact us at %{mail}. Attach the request ID shown below to help us investigate."
   footer:
     author: Protected by %{cerberus} from %{sjtug}.
     upstream: Heavily inspired by %{anubis} from %{techaro} in 🇨🇦.

@@ -54,7 +54,7 @@ type Config struct {
 	MaxMemUsage int64 `json:"max_mem_usage,omitempty"`
 	// CookieName is the name of the cookie used to store signed certificate.
 	CookieName string `json:"cookie_name,omitempty"`
-	// HeaderName is the name of the header used to store cerberus status ("PASS-BRIEF", "PASS-FULL", "BLOCK", "FAIL").
+	// HeaderName is the name of the header used to store cerberus status ("PASS", "CHALLENGE", "FAIL", "BLOCKED", "DISABLED").
 	HeaderName string `json:"header_name,omitempty"`
 	// Title is the title of the challenge page.
 	Title string `json:"title,omitempty"`
