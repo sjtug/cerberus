@@ -102,6 +102,9 @@ func calcSignature(challenge string, nonce uint32, ts int64, c *core.Instance) s
 }
 
 func respondFailure(w http.ResponseWriter, r *http.Request, c *core.Config, msg string, blocked bool, status int, baseURL string) error {
+	// Do not cache failure responses.
+	w.Header().Set("Cache-Control", "no-cache")
+
 	if blocked {
 		if c.Drop {
 			// Drop the connection

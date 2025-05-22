@@ -43,6 +43,9 @@ func getClientIP(r *http.Request) string {
 func (m *Middleware) invokeAuth(w http.ResponseWriter, r *http.Request) error {
 	c := m.instance
 
+	// Make sure the response is not cached so that users always see the latest challenge.
+	w.Header().Set("Cache-Control", "no-cache")
+
 	ipBlockRaw := caddyhttp.GetVar(r.Context(), core.VarIPBlock)
 	if ipBlockRaw != nil {
 		ipBlock := ipBlockRaw.(ipblock.IPBlock)

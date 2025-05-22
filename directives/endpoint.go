@@ -42,6 +42,9 @@ func checkAnswer(s string, difficulty int) bool {
 func (e *Endpoint) answerHandle(w http.ResponseWriter, r *http.Request) error {
 	c := e.instance
 
+	// Just to make sure the response is not cached, although this should be the default behavior for POST requests.
+	w.Header().Set("Cache-Control", "no-cache")
+
 	nonceStr := r.FormValue("nonce")
 	if nonceStr == "" {
 		e.logger.Info("nonce is empty")
@@ -171,7 +174,7 @@ func tryServeFile(w http.ResponseWriter, r *http.Request) bool {
 	filePath := strings.TrimSuffix(caddyhttp.SanitizedPathJoin("/dist/", strings.TrimPrefix(r.URL.Path, "/static/")), "/")
 
 	// Add cache control headers for static assets
-	w.Header().Set("Cache-Control", "public, max-age=31536000") // Cache for 1 year
+	w.Header().Set("Cache-Control", "public, max-age=31536000, immutable") // Cache for 1 year
 	w.Header().Set("Vary", "Accept-Encoding")
 
 	// Create a new request with the modified path
