@@ -39,6 +39,7 @@ go.work.sum
 caddy
 
 .parcel-cache
+node_modules/
 
 # Generated files (excluded from master branch, but included in dist branch)
 web/dist
