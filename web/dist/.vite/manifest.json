@@ -1,6 +1,6 @@
 {
   "global.css": {
-    "file": "assets/global-6Qa2WW0s.css",
+    "file": "assets/global-DPUCbUhM.css",
     "src": "global.css",
     "isEntry": true
   },
@@ -35,7 +35,7 @@
     "isEntry": true
   },
   "js/main.mjs": {
-    "file": "assets/main-paxRhMWa.js",
+    "file": "assets/main-DbJlMk55.js",
     "name": "main",
     "src": "js/main.mjs",
     "isEntry": true,

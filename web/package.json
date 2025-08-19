@@ -12,13 +12,13 @@
         "@messageformat/convert": "^1.0.0",
         "@messageformat/core": "^3.4.0",
         "@messageformat/runtime": "^3.0.1",
-        "glob": "^11.0.2",
+        "glob": "^11.0.3",
         "pow-wasm": "file:../pow/pkg",
-        "tailwindcss": "^4.1.7",
-        "yaml": "^2.7.1"
+        "tailwindcss": "^4.1.12",
+        "yaml": "^2.8.1"
     },
     "devDependencies": {
-        "@tailwindcss/vite": "^4.1.7",
+        "@tailwindcss/vite": "^4.1.12",
         "vite": "^6.3.5",
         "vite-plugin-imagemin": "^0.6.1"
     }

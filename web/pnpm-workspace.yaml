@@ -1,4 +1,5 @@
 onlyBuiltDependencies:
+  - '@tailwindcss/oxide'
   - cwebp-bin
   - esbuild
   - gifsicle
