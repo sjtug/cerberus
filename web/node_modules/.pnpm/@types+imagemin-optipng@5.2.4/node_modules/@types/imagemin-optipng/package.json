@@ -1,0 +1,27 @@
+{
+    "name": "@types/imagemin-optipng",
+    "version": "5.2.4",
+    "description": "TypeScript definitions for imagemin-optipng",
+    "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/imagemin-optipng",
+    "license": "MIT",
+    "contributors": [
+        {
+            "name": "Romain Faust",
+            "githubUsername": "romain-faust",
+            "url": "https://github.com/romain-faust"
+        }
+    ],
+    "main": "",
+    "types": "index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/imagemin-optipng"
+    },
+    "scripts": {},
+    "dependencies": {
+        "@types/imagemin": "*"
+    },
+    "typesPublisherContentHash": "568fc17a2d8e9bd85a41d8fb1c6790c3c21276dcaa6d4c3a5a9efca1cccf86ae",
+    "typeScriptVersion": "4.5"
+}

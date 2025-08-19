@@ -1,0 +1,48 @@
+{
+	"name": "cwebp-bin",
+	"version": "6.1.2",
+	"description": "cwebp wrapper that makes it seamlessly available as a local dependency",
+	"license": "MIT",
+	"repository": "imagemin/cwebp-bin",
+	"funding": "https://github.com/imagemin/cwebp-bin?sponsor=1",
+	"bin": {
+		"cwebp": "cli.js"
+	},
+	"engines": {
+		"node": ">=10"
+	},
+	"scripts": {
+		"postinstall": "node lib/install.js",
+		"test": "xo && ava --timeout=120s"
+	},
+	"files": [
+		"cli.js",
+		"index.js",
+		"lib",
+		"vendor/source"
+	],
+	"keywords": [
+		"imagemin",
+		"compress",
+		"image",
+		"img",
+		"jpeg",
+		"jpg",
+		"minify",
+		"optimize",
+		"png",
+		"webp"
+	],
+	"dependencies": {
+		"bin-build": "^3.0.0",
+		"bin-wrapper": "^4.0.1"
+	},
+	"devDependencies": {
+		"ava": "^3.8.0",
+		"bin-check": "^4.1.0",
+		"compare-size": "^3.0.0",
+		"execa": "^1.0.0",
+		"tempy": "^0.5.0",
+		"xo": "^0.30.0"
+	}
+}

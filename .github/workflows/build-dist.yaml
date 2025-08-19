@@ -74,8 +74,8 @@ jobs:
       
       - name: Build artifacts
         run: |
-          devenv tasks run dist:clean
-          devenv tasks run dist:build
+          devenv tasks run dist:clean --mode before
+          devenv tasks run dist:build --mode before
       
       - name: Commit and push dist branch
         run: |

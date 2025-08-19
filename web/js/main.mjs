@@ -3,18 +3,14 @@
 import pow from "./pow.mjs";
 import Messages from "@messageformat/runtime/messages"
 import msgData from "./icu/compiled.mjs"
+import mascotPass from "../img/mascot-pass.png"
+import mascotFail from "../img/mascot-fail.png"
+import mascotPuzzle from "../img/mascot-puzzle.png"
 
 const messages = new Messages(msgData)
-console.log(messages.locale, messages.availableLocales);
 
 function t(key, props) {
   return messages.get(key.split('.'), props)
-}
-
-const meta = {
-  baseURL: "",
-  version: "",
-  locale: ""
 }
 
 const dom = {
@@ -29,7 +25,7 @@ const dom = {
 
 const ui = {
   title: (title) => dom.title.textContent = title,
-  mascotState: (state) => dom.mascot.src = `${meta.baseURL}/static/img/mascot-${state}.png?v=${meta.version}`,
+  mascotState: (state) => dom.mascot.src = state === 'pass' ? mascotPass : state === 'fail' ? mascotFail : mascotPuzzle,
   status: (status) => dom.status.textContent = status,
   metrics: (metrics) => dom.metrics.textContent = metrics,
   message: (message) => dom.message.textContent = message,
@@ -64,18 +60,9 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
 }
 
 (async () => {
-  // const image = document.getElementById('image');
-  // const spinner = document.getElementById('spinner');
-  // const anubisVersion = JSON.parse(document.getElementById('anubis_version').textContent);
-
   const thisScript = document.getElementById('challenge-script');
   const { challenge, difficulty, nonce: inputNonce, ts, signature } = JSON.parse(thisScript.getAttribute('x-challenge'));
-  const { baseURL, version, locale } = JSON.parse(thisScript.getAttribute('x-meta'));
-
-  // Initialize UI
-  meta.baseURL = baseURL;
-  meta.version = version;
-  meta.locale = locale;
+  const { baseURL, locale } = JSON.parse(thisScript.getAttribute('x-meta'));
 
   // Set locale
   messages.locale = locale;
@@ -116,7 +103,6 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
     };
   });
   const t1 = Date.now();
-  console.log({ hash, solution });
 
   // Show success state
   ui.title(t('success.title'));

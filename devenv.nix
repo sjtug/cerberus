@@ -6,10 +6,7 @@
     git
     xcaddy
     templ
-    esbuild
     golangci-lint
-    tailwindcss_4
-    pngquant
     wasm-pack
   ];
 
@@ -21,43 +18,33 @@
 
   tasks =
     let
-      tailwindcss = "${pkgs.tailwindcss_4}/bin/tailwindcss";
-      find = "${pkgs.findutils}/bin/find";
-      xargs = "${pkgs.findutils}/bin/xargs";
-      pngquant = "${pkgs.pngquant}/bin/pngquant";
       templ = "${pkgs.templ}/bin/templ";
       wasm-pack = "${pkgs.wasm-pack}/bin/wasm-pack";
       pnpm = "${pkgs.nodePackages.pnpm}/bin/pnpm";
-      pnpx = "${pkgs.nodePackages.pnpm}/bin/pnpx";
       golangci-lint = "${pkgs.golangci-lint}/bin/golangci-lint";
       node = "${pkgs.nodejs}/bin/node";
     in
     {
-      "css:build".exec = "${tailwindcss} -i ./web/global.css -o ./web/dist/global.css --minify";
       "wasm:build".exec = ''
-        ${wasm-pack} build --target web ./pow --no-default-features
+        PATH=${pkgs.cargo}/bin:${pkgs.rustc}/bin:${pkgs.lld}/bin:$PATH ${wasm-pack} build --target web ./pow --no-default-features
       '';
       "js:install" = {
         exec = ''
-          cd web/js
+          cd web
           ${pnpm} install
         '';
         after = [ "wasm:build" ];
       };
       "js:bundle" = {
         exec = ''
-          cd web/js
-          ${pnpx} parcel build --dist-dir ../dist/
+          cd web
+          ${pnpm} run build
         '';
         after = [
           "js:install"
           "js:icu"
         ];
       };
-      "img:dist".exec = ''
-        mkdir -p ./web/dist/img
-        ${find} ./web/img -maxdepth 1 -name "*.png" -printf "%f\n" | ${xargs} -n 1 sh -c '${pngquant} --force --strip --quality 0-20 --speed 1 ./web/img/$0 -o ./web/dist/img/$0'
-      '';
       "go:codegen".exec = "${templ} generate";
       "js:icu" = {
         exec = ''
@@ -69,14 +56,14 @@
       };
       "dist:clean".exec = "rm -rf ./web/dist";
       "dist:build".after = [
-        "css:build"
         "js:bundle"
-        "img:dist"
         "go:codegen"
       ];
       "go:lint" = {
         exec = "${golangci-lint} run";
-        after = [ "go:codegen" ];
+        after = [
+          "go:codegen"
+        ];
       };
     };
 

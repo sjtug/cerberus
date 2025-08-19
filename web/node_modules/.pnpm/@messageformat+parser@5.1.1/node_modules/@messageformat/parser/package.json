@@ -1,0 +1,40 @@
+{
+  "name": "@messageformat/parser",
+  "version": "5.1.1",
+  "description": "An AST parser for ICU MessageFormat strings",
+  "keywords": [
+    "icu",
+    "messageformat",
+    "parser"
+  ],
+  "contributors": [
+    "Alex Sexton <alexsexton@gmail.com>",
+    "Eemeli Aro <eemeli@gmail.com>",
+    "Nikola Kovacs <nikola.kovacs@gmail.com>",
+    "Adrian Vogelsgesang <adrian.vogelsgesang@tum.de>"
+  ],
+  "license": "MIT",
+  "homepage": "http://messageformat.github.io/messageformat/api/parser/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/messageformat/messageformat.git",
+    "directory": "packages/parser"
+  },
+  "type": "commonjs",
+  "main": "lib/parser.js",
+  "files": [
+    "lib/",
+    "codemod-fix-backslash-escapes.js"
+  ],
+  "exports": {
+    ".": "./lib/parser.js",
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "moo": "^0.5.1"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "extract-api": "api-extractor run --verbose"
+  }
+}

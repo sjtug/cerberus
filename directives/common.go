@@ -159,6 +159,15 @@ func setupRequestID(r *http.Request) *http.Request {
 	return r
 }
 
+func setupManifest(r *http.Request) *http.Request {
+	manifest, err := web.LoadManifest()
+	if err != nil {
+		panic(err)
+	}
+
+	return r.WithContext(context.WithValue(r.Context(), web.ManifestCtxKey, manifest))
+}
+
 func renderTemplate(w http.ResponseWriter, r *http.Request, c *core.Config, baseURL string, header string, child templ.Component, opts ...func(*templ.ComponentHandler)) error {
 	ctx := templ.WithChildren(
 		context.WithValue(

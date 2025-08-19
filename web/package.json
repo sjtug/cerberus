@@ -1,0 +1,25 @@
+{
+    "name": "cerberus-js",
+    "version": "0.0.1",
+    "private": true,
+    "source": "main.mjs",
+    "browserslist": "last 2 versions, not dead, > 0.2%",
+    "type": "module",
+    "scripts": {
+        "build": "vite build"
+    },
+    "dependencies": {
+        "@messageformat/convert": "^1.0.0",
+        "@messageformat/core": "^3.4.0",
+        "@messageformat/runtime": "^3.0.1",
+        "glob": "^11.0.2",
+        "pow-wasm": "file:../pow/pkg",
+        "tailwindcss": "^4.1.7",
+        "yaml": "^2.7.1"
+    },
+    "devDependencies": {
+        "@tailwindcss/vite": "^4.1.7",
+        "vite": "^6.3.5",
+        "vite-plugin-imagemin": "^0.6.1"
+    }
+}

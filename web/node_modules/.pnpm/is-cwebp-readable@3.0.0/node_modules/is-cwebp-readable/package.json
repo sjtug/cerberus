@@ -1,0 +1,48 @@
+{
+	"name": "is-cwebp-readable",
+	"version": "3.0.0",
+	"description": "Check if a Buffer/Uint8Array is available for cwebp image source",
+	"repository": "shinnn/is-cwebp-readable",
+	"author": "Shinnosuke Watanabe (https://github.com/shinnn)",
+	"license": "ISC",
+	"scripts": {
+		"bench": "node -p \"require('chalk').yellow('NOTE: Smaller is better.\\n')\" && node benchmark/array-index-of.js && node benchmark/array-includes.js && node benchmark/keys.js && node benchmark/logical-or.js && node benchmark/regexp-test.js && node benchmark/set.js && node -p \"''\"",
+		"pretest": "eslint .",
+		"test": "nyc node test.js"
+	},
+	"files": [
+		"index.js"
+	],
+	"keywords": [
+		"buffer",
+		"uint8array",
+		"type",
+		"file",
+		"detect",
+		"image",
+		"jpg",
+		"jpeg",
+		"png",
+		"tif",
+		"tiff",
+		"webp",
+		"cwebp"
+	],
+	"dependencies": {
+		"file-type": "^10.5.0"
+	},
+	"devDependencies": {
+		"@shinnn/eslint-config": "^6.8.1",
+		"chalk": "^2.4.1",
+		"eslint": "^5.9.0",
+		"nyc": "^13.1.0",
+		"nyc-config-common": "^1.0.1",
+		"tape": "^4.9.1"
+	},
+	"eslintConfig": {
+		"extends": "@shinnn"
+	},
+	"nyc": {
+		"extends": "nyc-config-common"
+	}
+}

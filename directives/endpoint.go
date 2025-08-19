@@ -188,6 +188,7 @@ func tryServeFile(w http.ResponseWriter, r *http.Request) bool {
 
 func (e *Endpoint) ServeHTTP(w http.ResponseWriter, r *http.Request, _ caddyhttp.Handler) error {
 	r = setupRequestID(r)
+	r = setupManifest(r)
 	r, err := setupLocale(r)
 	if err != nil {
 		return err

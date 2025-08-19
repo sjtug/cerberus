@@ -81,6 +81,7 @@ func (m *Middleware) invokeAuth(w http.ResponseWriter, r *http.Request) error {
 
 func (m *Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
 	r = setupRequestID(r)
+	r = setupManifest(r)
 	r, err := setupLocale(r)
 	if err != nil {
 		return err
