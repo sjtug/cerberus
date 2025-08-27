@@ -3,5 +3,9 @@
 @source not "dist";
 
 body {
-    background-color: #f4e9d5;
+  background-color: #f4e9d5;
+}
+
+html:not(.noscript-hidden) .noscript {
+  @apply hidden;
 }

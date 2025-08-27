@@ -13,7 +13,6 @@ zh:
         如果您了解 %{techaro} 开发的 %{anubis}，那么 Cerberus 采用了类似的 PoW 验证技术。不同的是，Anubis 主要针对 AI 爬虫，而 Cerberus 则采用了更激进的策略来保护我们的开源基础设施。
       part_3: >-
         请注意，Cerberus 需要启用现代 JavaScript 功能，而 %{jshelter} 等插件会禁用这些功能。请为本域名禁用 %{jshelter} 或类似的插件。
-    must_enable_js: "请启用 JavaScript 以继续访问"
   success:
     title: "验证成功"
     verification_complete: "验证已完成"
@@ -24,6 +23,12 @@ zh:
     browser_config_or_bug: "可能是浏览器配置问题，也可能是我们的系统出现了异常"
     ip_blocked: "由于检测到可疑活动，您的 IP 地址或本地网络已被封禁"
     wait_before_retry: "请稍后再试，某些情况下可能需要等待数小时"
+    what_should_i_do: "我应该怎么做？"
+    must_enable_js: "请启用 JavaScript 以继续访问"
+    apologize_please_enable_js: >-
+      您的浏览器通过设置或扩展程序禁用了 JavaScript。我们对此造成的不便深表歉意，但请重新启用 JavaScript 以继续访问。
+    do_not_reload_too_often: >-
+      不用担心 - 您可以尝试在几秒后刷新页面重试。但请尽量不要频繁刷新，因为这可能导致您的 IP 被封禁。
     contact_us: "如有问题，请通过 %{mail} 联系我们。请附上下方显示的 request ID，以便我们进行排查。"
   footer:
     author: "由 %{sjtug} 开发的 %{cerberus} 提供保护"

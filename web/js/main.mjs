@@ -14,24 +14,45 @@ function t(key, props) {
 }
 
 const dom = {
+  root: document.documentElement,
+  mainArea: document.getElementById('main-area'),
+  messageArea: document.getElementById('message-area'),
   title: document.getElementById('title'),
   mascot: document.getElementById('mascot'),
   status: document.getElementById('status'),
   metrics: document.getElementById('metrics'),
-  message: document.getElementById('message'),
+  progressMessage: document.getElementById('message'),
   progressContainer: document.getElementById('progress-container'),
-  progressBar: document.getElementById('progress-bar')
+  progressBar: document.getElementById('progress-bar'),
 }
 
 const ui = {
+  init: () => {
+    dom.root.classList.remove('noscript-hidden');
+  },
+  areaMode: (mode) => {
+    if (mode === "progress") {
+      dom.mainArea.classList.remove('hidden');
+      dom.messageArea.classList.add('hidden');
+    } else if (mode === "message") {
+      dom.mainArea.classList.add('hidden');
+      dom.messageArea.classList.remove('hidden');
+    }
+  },
   title: (title) => dom.title.textContent = title,
   mascotState: (state) => dom.mascot.src = state === 'pass' ? mascotPass : state === 'fail' ? mascotFail : mascotPuzzle,
   status: (status) => dom.status.textContent = status,
   metrics: (metrics) => dom.metrics.textContent = metrics,
-  message: (message) => dom.message.textContent = message,
+  progressMessage: (message) => dom.progressMessage.textContent = message,
   progress: (progress) => {
     dom.progressContainer.classList.toggle('hidden', !progress);
     dom.progressBar.style.width = `${progress}%`;
+  },
+  message: (message) => {
+    dom.messageArea.textContent = message;
+  },
+  description: (description) => {
+    dom.description.textContent = description;
   }
 }
 
@@ -68,11 +89,13 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
   messages.locale = locale;
 
   // Set initial checking state
+  ui.init();
+  ui.areaMode('progress');
   ui.title(t('challenge.title'));
   ui.mascotState('puzzle');
   ui.status(t('challenge.calculating'));
   ui.metrics(t('challenge.difficulty_speed', { difficulty, speed: 0 }));
-  ui.message('');
+  ui.progressMessage('');
   ui.progress(0);
 
   const t0 = Date.now();
@@ -98,7 +121,7 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
       const speed = iters / delta;
       ui.progress(distance);
       ui.metrics(t('challenge.difficulty_speed', { difficulty, speed: speed.toFixed(3) }));
-      ui.message(probability < 0.01 ? t('challenge.taking_longer') : undefined);
+      ui.progressMessage(probability < 0.01 ? t('challenge.taking_longer') : undefined);
       lastUpdate = delta;
     };
   });
@@ -109,7 +132,7 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
   ui.mascotState('pass');
   ui.status(t('success.verification_complete'));
   ui.metrics(t('success.took_time_iterations', { time: t1 - t0, iterations: solution }));
-  ui.message('');
+  ui.progressMessage('');
   ui.progress(0);
 
   const form = createAnswerForm(hash, solution, baseURL, inputNonce, ts, signature);

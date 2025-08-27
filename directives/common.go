@@ -119,7 +119,6 @@ func respondFailure(w http.ResponseWriter, r *http.Request, c *core.Config, msg 
 			web.Error(
 				i18n.T(r.Context(), "error.ip_blocked"),
 				i18n.T(r.Context(), "error.wait_before_retry"),
-				c.Mail,
 			),
 			templ.WithStatus(status),
 		)
@@ -131,7 +130,6 @@ func respondFailure(w http.ResponseWriter, r *http.Request, c *core.Config, msg 
 		web.Error(
 			msg,
 			i18n.T(r.Context(), "error.browser_config_or_bug"),
-			c.Mail,
 		),
 		templ.WithStatus(status),
 	)
@@ -171,9 +169,13 @@ func setupManifest(r *http.Request) *http.Request {
 func renderTemplate(w http.ResponseWriter, r *http.Request, c *core.Config, baseURL string, header string, child templ.Component, opts ...func(*templ.ComponentHandler)) error {
 	ctx := templ.WithChildren(
 		context.WithValue(
-			context.WithValue(r.Context(), web.BaseURLCtxKey, baseURL),
-			web.VersionCtxKey,
-			core.Version,
+			context.WithValue(
+				context.WithValue(r.Context(), web.BaseURLCtxKey, baseURL),
+				web.VersionCtxKey,
+				core.Version,
+			),
+			web.MailCtxKey,
+			c.Mail,
 		),
 		child,
 	)

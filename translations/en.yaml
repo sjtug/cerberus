@@ -12,7 +12,6 @@ en:
         If you're familiar with %{anubis} by %{techaro}, Cerberus is similar - it performs a PoW challenge to verify the request. While Anubis focuses on protecting websites from AI scrapers, Cerberus takes a much more aggressive approach to protect our open-source infrastructure.
       part_3: >-
         Please note that Cerberus requires the use of modern JavaScript features that plugins like %{jshelter} will disable. Please disable %{jshelter} or other such plugins for this domain.
-    must_enable_js: "You must enable JavaScript to proceed."
   success:
     title: "Success!"
     verification_complete: "Verification Complete!"
@@ -23,6 +22,12 @@ en:
     browser_config_or_bug: "There might be an issue with your browser configuration, or something is wrong on our side."
     ip_blocked: "You (or your local network) have been blocked due to suspicious activity."
     wait_before_retry: "Please wait a while before you try again; in some cases this may take a few hours."
+    must_enable_js: "You must enable JavaScript to proceed."
+    what_should_i_do: "What should I do?"
+    apologize_please_enable_js: >-
+      Your browser has JavaScript disabled via settings or an extension. We apologize for the inconvenience, but please re-enable JavaScript to proceed.
+    do_not_reload_too_often: >-
+      Don't worry - you can try reloading the page after a few seconds. But please try not to do this too often, as it might lead to your IP being blocked.
     contact_us: "If you believe this is an error, please contact us at %{mail}. Attach the request ID shown below to help us investigate."
   footer:
     author: Protected by %{cerberus} from %{sjtug}.

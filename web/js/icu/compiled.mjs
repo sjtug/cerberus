@@ -11,8 +11,7 @@ export default {
         part_1: (d) => "您看到这个页面是因为网站管理员启用了 " + d.cerberus + " 来防御异常流量攻击。这类攻击可能导致网站服务中断，影响所有用户的正常访问。",
         part_2: (d) => "如果您了解 " + d.techaro + " 开发的 " + d.anubis + "，那么 Cerberus 采用了类似的 PoW 验证技术。不同的是，Anubis 主要针对 AI 爬虫，而 Cerberus 则采用了更激进的策略来保护我们的开源基础设施。",
         part_3: (d) => "请注意，Cerberus 需要启用现代 JavaScript 功能，而 " + d.jshelter + " 等插件会禁用这些功能。请为本域名禁用 " + d.jshelter + " 或类似的插件。"
-      },
-      must_enable_js: () => "请启用 JavaScript 以继续访问"
+      }
     },
     success: {
       title: () => "验证成功",
@@ -25,6 +24,10 @@ export default {
       browser_config_or_bug: () => "可能是浏览器配置问题，也可能是我们的系统出现了异常",
       ip_blocked: () => "由于检测到可疑活动，您的 IP 地址或本地网络已被封禁",
       wait_before_retry: () => "请稍后再试，某些情况下可能需要等待数小时",
+      what_should_i_do: () => "我应该怎么做？",
+      must_enable_js: () => "请启用 JavaScript 以继续访问",
+      apologize_please_enable_js: () => "您的浏览器通过设置或扩展程序禁用了 JavaScript。我们对此造成的不便深表歉意，但请重新启用 JavaScript 以继续访问。",
+      do_not_reload_too_often: () => "不用担心 - 您可以尝试在几秒后刷新页面重试。但请尽量不要频繁刷新，因为这可能导致您的 IP 被封禁。",
       contact_us: (d) => "如有问题，请通过 " + d.mail + " 联系我们。请附上下方显示的 request ID，以便我们进行排查。"
     },
     footer: {
@@ -43,8 +46,7 @@ export default {
         part_1: (d) => "You are seeing this because the administrator of this website has set up " + d.cerberus + " to protect the server against abusive traffic. This can and does cause downtime for the websites, which makes their resources inaccessible for everyone.",
         part_2: (d) => "If you're familiar with " + d.anubis + " by " + d.techaro + ", Cerberus is similar - it performs a PoW challenge to verify the request. While Anubis focuses on protecting websites from AI scrapers, Cerberus takes a much more aggressive approach to protect our open-source infrastructure.",
         part_3: (d) => "Please note that Cerberus requires the use of modern JavaScript features that plugins like " + d.jshelter + " will disable. Please disable " + d.jshelter + " or other such plugins for this domain."
-      },
-      must_enable_js: () => "You must enable JavaScript to proceed."
+      }
     },
     success: {
       title: () => "Success!",
@@ -57,6 +59,10 @@ export default {
       browser_config_or_bug: () => "There might be an issue with your browser configuration, or something is wrong on our side.",
       ip_blocked: () => "You (or your local network) have been blocked due to suspicious activity.",
       wait_before_retry: () => "Please wait a while before you try again; in some cases this may take a few hours.",
+      must_enable_js: () => "You must enable JavaScript to proceed.",
+      what_should_i_do: () => "What should I do?",
+      apologize_please_enable_js: () => "Your browser has JavaScript disabled via settings or an extension. We apologize for the inconvenience, but please re-enable JavaScript to proceed.",
+      do_not_reload_too_often: () => "Don't worry - you can try reloading the page after a few seconds. But please try not to do this too often, as it might lead to your IP being blocked.",
       contact_us: (d) => "If you believe this is an error, please contact us at " + d.mail + ". Attach the request ID shown below to help us investigate."
     },
     footer: {
