@@ -16,14 +16,17 @@ function t(key, props) {
 const dom = {
   root: document.documentElement,
   mainArea: document.getElementById('main-area'),
-  messageArea: document.getElementById('message-area'),
   title: document.getElementById('title'),
   mascot: document.getElementById('mascot'),
   status: document.getElementById('status'),
   metrics: document.getElementById('metrics'),
-  progressMessage: document.getElementById('message'),
+  progressMessage: document.getElementById('progress-message'),
   progressContainer: document.getElementById('progress-container'),
   progressBar: document.getElementById('progress-bar'),
+  messageArea: document.getElementById('message-area'),
+  message: document.getElementById('message'),
+  description: document.getElementById('description'),
+  code: document.getElementById('code'),
 }
 
 const ui = {
@@ -33,10 +36,10 @@ const ui = {
   areaMode: (mode) => {
     if (mode === "progress") {
       dom.mainArea.classList.remove('hidden');
-      dom.messageArea.classList.add('hidden');
+      dom.messageArea.classList.add('noscript');
     } else if (mode === "message") {
       dom.mainArea.classList.add('hidden');
-      dom.messageArea.classList.remove('hidden');
+      dom.messageArea.classList.remove('noscript');
     }
   },
   title: (title) => dom.title.textContent = title,
@@ -48,12 +51,12 @@ const ui = {
     dom.progressContainer.classList.toggle('hidden', !progress);
     dom.progressBar.style.width = `${progress}%`;
   },
-  message: (message) => {
-    dom.messageArea.textContent = message;
+  message: (message) => dom.message.textContent = message,
+  description: (description) => dom.description.textContent = description,
+  code: (code) => {
+    dom.code.classList.toggle('hidden!', !code);
+    dom.code.textContent = code;
   },
-  description: (description) => {
-    dom.description.textContent = description;
-  }
 }
 
 function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
@@ -80,7 +83,22 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
   return form;
 }
 
-(async () => {
+const handleError = (error) => {
+  ui.areaMode('message');
+  ui.title(t('error.error_occurred'));
+  ui.mascotState('fail');
+
+  if (error.message.includes("Failed to initialize WebAssembly module")) {
+    ui.message(t('error.must_enable_wasm'));
+    ui.description(t('error.apologize_please_enable_wasm'));
+  } else {
+    ui.message(t('error.client_error'));
+    ui.description(t('error.browser_config_or_bug'));
+    ui.code(t('error.error_details', { error: error.message }));
+  }
+}
+
+const main = async () => {
   const thisScript = document.getElementById('challenge-script');
   const { challenge, difficulty, nonce: inputNonce, ts, signature } = JSON.parse(thisScript.getAttribute('x-challenge'));
   const { baseURL, locale } = JSON.parse(thisScript.getAttribute('x-meta'));
@@ -101,7 +119,7 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
   const t0 = Date.now();
   let lastUpdate = 0;
 
-  const likelihood = Math.pow(16, -difficulty/2);
+  const likelihood = Math.pow(16, -difficulty / 2);
 
   const mergedChallenge = `${challenge}|${inputNonce}|${ts}|${signature}|`;
   const { hash, nonce: solution } = await pow(mergedChallenge, difficulty, null, (iters) => {
@@ -140,4 +158,6 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
     form.submit();
   }, 250);
 
-})();
+};
+
+main().catch(handleError);

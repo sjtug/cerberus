@@ -119,6 +119,7 @@ func respondFailure(w http.ResponseWriter, r *http.Request, c *core.Config, msg 
 			web.Error(
 				i18n.T(r.Context(), "error.ip_blocked"),
 				i18n.T(r.Context(), "error.wait_before_retry"),
+				"",
 			),
 			templ.WithStatus(status),
 		)
@@ -128,8 +129,9 @@ func respondFailure(w http.ResponseWriter, r *http.Request, c *core.Config, msg 
 	return renderTemplate(w, r, c, baseURL,
 		i18n.T(r.Context(), "error.error_occurred"),
 		web.Error(
-			msg,
+			i18n.T(r.Context(), "error.server_error"),
 			i18n.T(r.Context(), "error.browser_config_or_bug"),
+			i18n.T(r.Context(), "error.error_details", i18n.M{"error": msg}),
 		),
 		templ.WithStatus(status),
 	)

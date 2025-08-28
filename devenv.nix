@@ -14,6 +14,7 @@
   languages.go = {
     enable = true;
     enableHardeningWorkaround = true;
+    package = pkgs.go_1_25;
   };
 
   tasks =

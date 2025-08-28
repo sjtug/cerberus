@@ -17,9 +17,16 @@ en:
     verification_complete: "Verification Complete!"
     took_time_iterations: "Took %{time}ms, %{iterations} iterations"
   error:
-    error_occurred: "Error occurred while processing your request"
-    access_restricted: "Access has been restricted"
-    browser_config_or_bug: "There might be an issue with your browser configuration, or something is wrong on our side."
+    error_occurred: "Oops! Something went wrong"
+    server_error: "Server returned an error that we cannot handle."
+    client_error: "Unexpected error occurred during verification."
+    access_restricted: "Access has been restricted."
+    must_enable_wasm: "Please enable WebAssembly to proceed."
+    apologize_please_enable_wasm: >-
+      Your browser has WebAssembly disabled via settings or an extension. It's known that some browsers (e.g. Safari with Lockdown Mode) disable WebAssembly by default.
+      We apologize for the inconvenience, but please re-enable WebAssembly to proceed.
+    browser_config_or_bug: "There might be an issue with your browser configuration, or something is wrong on our side. Please attach the error details when contacting us."
+    error_details: "Error details: %{error}"
     ip_blocked: "You (or your local network) have been blocked due to suspicious activity."
     wait_before_retry: "Please wait a while before you try again; in some cases this may take a few hours."
     must_enable_js: "You must enable JavaScript to proceed."
@@ -27,8 +34,8 @@ en:
     apologize_please_enable_js: >-
       Your browser has JavaScript disabled via settings or an extension. We apologize for the inconvenience, but please re-enable JavaScript to proceed.
     do_not_reload_too_often: >-
-      Don't worry - you can try reloading the page after a few seconds. But please try not to do this too often, as it might lead to your IP being blocked.
-    contact_us: "If you believe this is an error, please contact us at %{mail}. Attach the request ID shown below to help us investigate."
+      You can try fixing the underlying issue (if you know how) and then reload the page, or simply wait a few seconds before refreshing. However, avoid reloading too frequently as this may cause your IP address to be blocked.
+    contact_us: "If you believe this is an error or have any questions, please contact us at %{mail}. Please kindly attach the request ID shown below to help us investigate."
   footer:
     author: Protected by %{cerberus} from %{sjtug}.
     upstream: Heavily inspired by %{anubis} from %{techaro} in 🇨🇦.
