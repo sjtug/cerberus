@@ -22,7 +22,11 @@
       templ = "${pkgs.templ}/bin/templ";
       wasm-pack = "${pkgs.wasm-pack}/bin/wasm-pack";
       pnpm = "${pkgs.nodePackages.pnpm}/bin/pnpm";
-      golangci-lint = "${pkgs.golangci-lint}/bin/golangci-lint";
+      golangci-lint = let 
+        pkg = pkgs.golangci-lint.override {
+          buildGoModule = pkgs.buildGo125Module;
+        };
+      in "${pkg}/bin/golangci-lint";
       node = "${pkgs.nodejs}/bin/node";
     in
     {
