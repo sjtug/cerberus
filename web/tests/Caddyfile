@@ -16,7 +16,7 @@
 	}
 }
 
-localhost:9693 {
+https://localhost:9693 {
 	encode
 
 	handle_path /.cerberus/* {
