@@ -1,4 +1,5 @@
 {
+	auto_https off
 	cerberus {
 		difficulty 12
 		max_pending 128

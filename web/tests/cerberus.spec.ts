@@ -42,4 +42,18 @@ test.describe(() => {
 
     await expect(page.getByText('Hello, foo.iso!')).toBeVisible({ timeout: 30000 });
   });
+
+  test("must fail when response is incorrect", async ({page}) => {
+    page.route("/.cerberus/answer", async (route, req) => {
+      const formData = await req.postDataJSON() as { response: string, solution: string, nonce: string, ts: string, signature: string };
+      formData.response = "1145141919810";
+      await route.continue({
+        postData: Object.entries(formData)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+          .join('&')
+      });
+    });
+
+    await expect(page.getByText('Server returned an error that we cannot handle.')).toBeVisible({ timeout: 30000 });
+  })
 });
