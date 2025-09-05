@@ -1,0 +1,49 @@
+{
+	cerberus {
+		difficulty 12
+		max_pending 128
+		access_per_approval 8
+		block_ttl "24h"
+		pending_ttl "1h"
+		approval_ttl "1h"
+		max_mem_usage "512MiB"
+		cookie_name "cerberus-auth"
+		header_name "X-Cerberus-Status"
+		title "Cerberus Challenge"
+		mail "admin@example.com"
+		prefix_cfg 20 64
+	}
+}
+
+localhost:9693 {
+	encode
+
+	handle_path /.cerberus/* {
+		cerberus_endpoint
+	}
+
+	@cerberus {
+		path *.iso
+		header User-Agent *Mozilla*
+	}
+
+	cerberus @cerberus {
+		base_url "/.cerberus"
+	}
+
+	@except_cerberus_endpoint {
+		not path /.cerberus/*
+	}
+
+	cerberus @except_cerberus_endpoint {
+		base_url "/.cerberus"
+		block_only
+	}
+
+	header /nojs/* Content-Security-Policy "script-src 'none'"
+	header /nowasm/* Content-Security-Policy "script-src 'self'; worker-src blob:"
+
+	respond /*foo "Hello, foo!"
+
+	respond /*foo.iso "Hello, foo.iso!"
+}

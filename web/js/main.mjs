@@ -88,7 +88,7 @@ const handleError = (error) => {
   ui.title(t('error.error_occurred'));
   ui.mascotState('fail');
 
-  if (error.message.includes("Failed to initialize WebAssembly module")) {
+  if (error.message && error.message.includes("Failed to initialize WebAssembly module")) {
     ui.message(t('error.must_enable_wasm'));
     ui.description(t('error.apologize_please_enable_wasm'));
   } else {

@@ -1,0 +1,52 @@
+name: Test
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v26
+      - uses: cachix/cachix-action@v14
+        with:
+          name: devenv
+      - name: Install devenv.sh
+        run: nix profile install nixpkgs#devenv
+      - name: Build Web Assets
+        run: |
+          devenv tasks run dist:clean --mode before
+          devenv tasks run dist:build --mode before
+      - name: Build
+        run: devenv shell xcaddy build
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: "caddy"
+          path: "caddy"
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v26
+      - uses: cachix/cachix-action@v14
+        with:
+          name: devenv
+      - name: Install devenv.sh
+        run: nix profile install nixpkgs#devenv
+      - name: Build Web Assets
+        run: |
+          devenv tasks run dist:clean --mode before
+          devenv tasks run dist:build --mode before
+      - name: Test
+        run: devenv test
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: web/playwright-report/
