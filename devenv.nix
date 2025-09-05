@@ -13,6 +13,7 @@
 
   env = {
     PLAYWRIGHT_BROWSERS_PATH = "${pkgs.playwright.passthru.browsers}";
+    PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS = "true";
     PLAYWRIGHT_NODEJS_PATH = "${pkgs.nodejs}/bin/node";
   };
 
