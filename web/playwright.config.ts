@@ -80,6 +80,7 @@ export default defineConfig({
     command: 'xcaddy run -- --config web/tests/Caddyfile',
     cwd: path.resolve(import.meta.dirname, '..'),
     url: 'https://localhost:9693',
+    timeout: 120000,
     ignoreHTTPSErrors: true,
     reuseExistingServer: !process.env.CI,
     gracefulShutdown: {
