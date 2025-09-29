@@ -35,19 +35,19 @@
     "isEntry": true
   },
   "js/main.mjs": {
-    "file": "assets/main-DWQRQxgU.js",
+    "file": "assets/main-DDij1wK-.js",
     "name": "main",
     "src": "js/main.mjs",
     "isEntry": true,
     "assets": [
-      "assets/pow_bg-BpeKwcsq.wasm",
+      "assets/pow_bg-CCbdjhNR.wasm",
       "assets/mascot-pass-B3FQ9yeD.png",
       "assets/mascot-fail-C1z397QQ.png",
       "assets/mascot-puzzle-DoXY0cHK.png"
     ]
   },
   "node_modules/.pnpm/pow@file+..+pow+pkg/node_modules/pow/pow_bg.wasm": {
-    "file": "assets/pow_bg-BpeKwcsq.wasm",
+    "file": "assets/pow_bg-CCbdjhNR.wasm",
     "src": "node_modules/.pnpm/pow@file+..+pow+pkg/node_modules/pow/pow_bg.wasm"
   }
 }
