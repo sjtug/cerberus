@@ -30,8 +30,8 @@ go test ./...
 # Run Playwright tests (requires Caddy build, can take several minutes on first run)
 # Build Caddy if needed:
 xcaddy build --with github.com/sjtug/cerberus=.
-# Then run Playwright tests:
-cd web && pnpm exec playwright test
+# Then run Playwright tests (Chromium only for faster execution):
+cd web && pnpm exec playwright test --project=chromium
 ```
 
 ### Linting
