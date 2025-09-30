@@ -16,7 +16,14 @@ const (
 	LocaleCtxKey
 	ManifestCtxKey
 	MailCtxKey
+	TelemetryCtxKey
 )
+
+type TelemetryConfig struct {
+	DSN         string
+	Environment string
+	SampleRate  float64
+}
 
 templ T(key string, args ...any) {
 	{ i18n.T(ctx, key, args...) }
@@ -44,6 +51,13 @@ func GetManifest(ctx context.Context) Manifest {
 
 func GetMail(ctx context.Context) string {
 	return ctx.Value(MailCtxKey).(string)
+}
+
+func GetTelemetryConfig(ctx context.Context) TelemetryConfig {
+	if val := ctx.Value(TelemetryCtxKey); val != nil {
+		return val.(TelemetryConfig)
+	}
+	return TelemetryConfig{}
 }
 
 func GetRequestID(ctx context.Context) string {
@@ -98,10 +112,15 @@ templ Challenge(challenge string, difficulty int, nonce uint32, ts int64, signat
 
 		baseURL := GetBaseURL(ctx)
 		locale := GetLocale(ctx)
+		telemetryConfig := GetTelemetryConfig(ctx)
 		metaInput := struct {
-			BaseURL string `json:"baseURL"`
-			Locale  string `json:"locale"`
-		}{baseURL, locale}
+			BaseURL       string  `json:"baseURL"`
+			Locale        string  `json:"locale"`
+			TelemetryDSN  string  `json:"telemetryDSN,omitempty"`
+			TelemetryEnv  string  `json:"telemetryEnv,omitempty"`
+			TelemetryRate float64 `json:"telemetryRate,omitempty"`
+			RequestID     string  `json:"requestID"`
+		}{baseURL, locale, telemetryConfig.DSN, telemetryConfig.Environment, telemetryConfig.SampleRate, GetRequestID(ctx)}
 	}}
 	<div id="main-area" class="hidden">
 		<img id="mascot" src={ AssetPath(ctx, "img/mascot-puzzle.png") } alt="Cute anime mascot character" class="mx-auto p-4 mb-2 max-w-64"/>

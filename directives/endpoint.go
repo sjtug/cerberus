@@ -11,6 +11,7 @@ import (
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
+	"github.com/getsentry/sentry-go"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/sjtug/cerberus/core"
 	"github.com/sjtug/cerberus/internal/ipblock"
@@ -58,6 +59,12 @@ func (e *Endpoint) answerHandle(w http.ResponseWriter, r *http.Request) error {
 	nonce := uint32(nonce64)
 	if !c.InsertUsedNonce(nonce) {
 		e.logger.Info("nonce already used")
+		// Capture nonce reuse attempt
+		if c.TelemetryEnabled {
+			CaptureMessage(r, "Nonce reuse attempted", sentry.LevelWarning, "nonce_reuse", map[string]interface{}{
+				"nonce": nonce,
+			})
+		}
 		return respondFailure(w, r, &c.Config, "nonce already used", false, http.StatusBadRequest, ".")
 	}
 
@@ -100,30 +107,66 @@ func (e *Endpoint) answerHandle(w http.ResponseWriter, r *http.Request) error {
 	challenge, err := challengeFor(r, c)
 	if err != nil {
 		e.logger.Error("failed to calculate challenge", zap.Error(err))
+		// Capture implementation error
+		if c.TelemetryEnabled {
+			CaptureError(r, err, "challenge_calculation_failed", map[string]interface{}{
+				"user_agent": r.UserAgent(),
+			})
+		}
 		return err
 	}
 
 	expectedSignature := calcSignature(challenge, nonce, ts, c)
 	if signature != expectedSignature {
 		e.logger.Debug("signature mismatch", zap.String("expected", expectedSignature), zap.String("actual", signature))
+		// Capture signature mismatch (possible clock drift, implementation error, or tampering)
+		if c.TelemetryEnabled {
+			CaptureMessage(r, "Signature mismatch in answer validation", sentry.LevelError, "signature_mismatch", map[string]interface{}{
+				"user_agent": r.UserAgent(),
+				"nonce":      nonce,
+				"timestamp":  ts,
+			})
+		}
 		return respondFailure(w, r, &c.Config, "signature mismatch", false, http.StatusForbidden, ".")
 	}
 
 	answer, err := blake3sum(fmt.Sprintf("%s|%d|%d|%s|%d", challenge, nonce, ts, signature, solution))
 	if err != nil {
 		e.logger.Error("failed to calculate answer", zap.Error(err))
+		// Capture implementation error
+		if c.TelemetryEnabled {
+			CaptureError(r, err, "answer_calculation_failed", map[string]interface{}{
+				"user_agent": r.UserAgent(),
+			})
+		}
 		return err
 	}
 
 	if !checkAnswer(response, c.Difficulty) {
 		clearCookie(w, c.CookieName)
 		e.logger.Error("wrong response", zap.String("response", response), zap.Int("difficulty", c.Difficulty))
+		// Capture wrong response (possible browser incompatibility)
+		if c.TelemetryEnabled {
+			CaptureMessage(r, "Challenge validation failed: wrong response", sentry.LevelError, "challenge_failed", map[string]interface{}{
+				"difficulty":   c.Difficulty,
+				"user_agent":   r.UserAgent(),
+				"failure_type": "wrong_response",
+			})
+		}
 		return respondFailure(w, r, &c.Config, "wrong response", false, http.StatusForbidden, ".")
 	}
 
 	if subtle.ConstantTimeCompare([]byte(answer), []byte(response)) != 1 {
 		clearCookie(w, c.CookieName)
 		e.logger.Error("response mismatch", zap.String("expected", answer), zap.String("actual", response))
+		// Capture response mismatch (possible browser incompatibility)
+		if c.TelemetryEnabled {
+			CaptureMessage(r, "Challenge validation failed: response mismatch", sentry.LevelError, "challenge_failed", map[string]interface{}{
+				"difficulty":   c.Difficulty,
+				"user_agent":   r.UserAgent(),
+				"failure_type": "response_mismatch",
+			})
+		}
 		return respondFailure(w, r, &c.Config, "response mismatch", false, http.StatusForbidden, ".")
 	}
 
@@ -140,6 +183,12 @@ func (e *Endpoint) answerHandle(w http.ResponseWriter, r *http.Request) error {
 	tokenStr, err := token.SignedString(c.GetPrivateKey())
 	if err != nil {
 		e.logger.Error("failed to sign token", zap.Error(err))
+		// Capture implementation error
+		if c.TelemetryEnabled {
+			CaptureError(r, err, "token_signing_failed", map[string]interface{}{
+				"user_agent": r.UserAgent(),
+			})
+		}
 		return err
 	}
 
@@ -191,6 +240,13 @@ func (e *Endpoint) ServeHTTP(w http.ResponseWriter, r *http.Request, _ caddyhttp
 	r = setupManifest(r)
 	r, err := setupLocale(r)
 	if err != nil {
+		c := e.instance
+		// Capture locale setup error
+		if c.TelemetryEnabled {
+			CaptureError(r, err, "locale_setup_failed", map[string]interface{}{
+				"accept_language": r.Header.Get("Accept-Language"),
+			})
+		}
 		return err
 	}
 
