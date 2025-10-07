@@ -1,9 +1,14 @@
 // Telemetry module for handling error reporting with user consent
 
-let Sentry = null;
+let sentryInit = null;
+let sentryCaptureException = null;
+let sentryCaptureMessage = null;
+let sentryWithScope = null;
+let sentryBrowserTracingIntegration = null;
+
 let sentryInitialized = false;
 let consentGiven = false;
-let pendingErrors = [];
+const pendingEvents = [];
 
 // Check if user has previously given consent
 export function hasConsent() {
@@ -28,16 +33,9 @@ export function setConsent(granted) {
   }
   consentGiven = granted;
 
-  // If consent was granted and we have pending errors, send them
-  if (granted && sentryInitialized && Sentry && pendingErrors.length > 0) {
-    pendingErrors.forEach(error => {
-      if (error.type === 'error') {
-        Sentry.captureException(error.error);
-      } else {
-        Sentry.captureMessage(error.message);
-      }
-    });
-    pendingErrors = [];
+  // If consent was granted and we have pending events, send them
+  if (granted && sentryInitialized && pendingEvents.length > 0) {
+    flushPendingEvents();
   }
 }
 
@@ -47,23 +45,33 @@ export async function initTelemetry(config) {
     return false;
   }
 
+  if (sentryInitialized) {
+    return true;
+  }
+
   try {
     // Dynamically import only the functions we need for tree-shaking
-    Sentry = await import('@sentry/browser');
+    const sentryModule = await import('./telemetry.sentry.mjs');
 
-    Sentry.init({
+    sentryInit = sentryModule.init;
+    sentryCaptureException = sentryModule.captureException;
+    sentryCaptureMessage = sentryModule.captureMessage;
+    sentryWithScope = sentryModule.withScope;
+    sentryBrowserTracingIntegration = sentryModule.browserTracingIntegration;
+
+    sentryInit({
       dsn: config.telemetryDSN,
       environment: config.telemetryEnv || 'production',
       sampleRate: 1.0, // Always capture all events (100%)
       integrations: [
-        Sentry.browserTracingIntegration(),
+        sentryBrowserTracingIntegration(),
       ],
       tracesSampleRate: 0,  // Disable tracing to reduce bundle size
       beforeSend: (event) => {
         // Only send events if consent has been given
         if (!consentGiven && !hasConsent()) {
           // Store the error for later if user gives consent
-          pendingErrors.push({ type: 'error', error: event });
+          pendingEvents.push({ type: 'error', error: event });
           return null;
         }
         // Remove any PII
@@ -88,6 +96,9 @@ export async function initTelemetry(config) {
 
     sentryInitialized = true;
     consentGiven = hasConsent();
+    if (consentGiven && pendingEvents.length > 0) {
+      flushPendingEvents();
+    }
     return true;
   } catch (error) {
     console.warn('Failed to initialize telemetry:', error);
@@ -97,16 +108,16 @@ export async function initTelemetry(config) {
 
 // Capture an error with context
 export function captureError(error, context = {}) {
-  if (!sentryInitialized || !Sentry) {
+  if (!sentryInitialized || !sentryCaptureException || !sentryWithScope) {
     return;
   }
 
   if (!consentGiven && !hasConsent()) {
-    pendingErrors.push({ type: 'error', error, context });
+    pendingEvents.push({ type: 'error', error, context });
     return;
   }
 
-  Sentry.withScope((scope) => {
+  sentryWithScope((scope) => {
     // Add context
     Object.entries(context).forEach(([key, value]) => {
       scope.setExtra(key, value);
@@ -120,22 +131,22 @@ export function captureError(error, context = {}) {
       language: navigator.language,
     });
 
-    Sentry.captureException(error);
+    sentryCaptureException(error);
   });
 }
 
 // Capture a message with context
 export function captureTelemetryMessage(message, level = 'info', context = {}) {
-  if (!sentryInitialized || !Sentry) {
+  if (!sentryInitialized || !sentryCaptureMessage || !sentryWithScope) {
     return;
   }
 
   if (!consentGiven && !hasConsent()) {
-    pendingErrors.push({ type: 'message', message, level, context });
+    pendingEvents.push({ type: 'message', message, level, context });
     return;
   }
 
-  Sentry.withScope((scope) => {
+  sentryWithScope((scope) => {
     // Set level
     scope.setLevel(level);
 
@@ -152,7 +163,7 @@ export function captureTelemetryMessage(message, level = 'info', context = {}) {
       language: navigator.language,
     });
 
-    Sentry.captureMessage(message);
+    sentryCaptureMessage(message);
   });
 }
 
@@ -192,4 +203,19 @@ export function showConsentDialog(onAccept, onDecline) {
 
   acceptButton.addEventListener('click', handleAccept);
   declineButton.addEventListener('click', handleDecline);
+}
+
+function flushPendingEvents() {
+  if (!sentryInitialized) {
+    return;
+  }
+
+  pendingEvents.forEach((event) => {
+    if (event.type === 'error') {
+      sentryCaptureException?.(event.error);
+    } else if (event.type === 'message') {
+      sentryCaptureMessage?.(event.message);
+    }
+  });
+  pendingEvents.length = 0;
 }
