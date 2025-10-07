@@ -62,7 +62,7 @@ export async function initTelemetry(config) {
     sentryInit({
       dsn: config.telemetryDSN,
       environment: config.telemetryEnv || 'production',
-      sampleRate: 1.0, // Always capture all events (100%)
+      sampleRate: typeof config.telemetryRate === 'number' ? config.telemetryRate : 1,
       integrations: [
         sentryBrowserTracingIntegration(),
       ],
