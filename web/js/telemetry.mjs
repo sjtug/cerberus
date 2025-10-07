@@ -1,7 +1,7 @@
 // Telemetry module for handling error reporting with user consent
 
+let Sentry = null;
 let sentryInitialized = false;
-let sentryModule = null;
 let consentGiven = false;
 let pendingErrors = [];
 
@@ -29,12 +29,12 @@ export function setConsent(granted) {
   consentGiven = granted;
 
   // If consent was granted and we have pending errors, send them
-  if (granted && sentryInitialized && pendingErrors.length > 0) {
+  if (granted && sentryInitialized && Sentry && pendingErrors.length > 0) {
     pendingErrors.forEach(error => {
       if (error.type === 'error') {
-        sentryModule.captureException(error.error);
+        Sentry.captureException(error.error);
       } else {
-        sentryModule.captureMessage(error.message, error.level);
+        Sentry.captureMessage(error.message);
       }
     });
     pendingErrors = [];
@@ -48,17 +48,17 @@ export async function initTelemetry(config) {
   }
 
   try {
-    // Dynamically import Sentry to avoid bundling it if not needed
-    sentryModule = await import('https://browser.sentry-cdn.com/8.47.0/bundle.min.js');
+    // Dynamically import only the functions we need for tree-shaking
+    Sentry = await import('@sentry/browser');
 
-    sentryModule.init({
+    Sentry.init({
       dsn: config.telemetryDSN,
       environment: config.telemetryEnv || 'production',
       sampleRate: 1.0, // Always capture all events (100%)
       integrations: [
-        sentryModule.browserTracingIntegration(),
+        Sentry.browserTracingIntegration(),
       ],
-      tracesSampleRate: 1.0, // Always capture all traces (100%)
+      tracesSampleRate: 0,  // Disable tracing to reduce bundle size
       beforeSend: (event) => {
         // Only send events if consent has been given
         if (!consentGiven && !hasConsent()) {
@@ -97,7 +97,7 @@ export async function initTelemetry(config) {
 
 // Capture an error with context
 export function captureError(error, context = {}) {
-  if (!sentryInitialized || !sentryModule) {
+  if (!sentryInitialized || !Sentry) {
     return;
   }
 
@@ -106,7 +106,7 @@ export function captureError(error, context = {}) {
     return;
   }
 
-  sentryModule.withScope((scope) => {
+  Sentry.withScope((scope) => {
     // Add context
     Object.entries(context).forEach(([key, value]) => {
       scope.setExtra(key, value);
@@ -120,13 +120,13 @@ export function captureError(error, context = {}) {
       language: navigator.language,
     });
 
-    sentryModule.captureException(error);
+    Sentry.captureException(error);
   });
 }
 
 // Capture a message with context
-export function captureMessage(message, level = 'info', context = {}) {
-  if (!sentryInitialized || !sentryModule) {
+export function captureTelemetryMessage(message, level = 'info', context = {}) {
+  if (!sentryInitialized || !Sentry) {
     return;
   }
 
@@ -135,7 +135,10 @@ export function captureMessage(message, level = 'info', context = {}) {
     return;
   }
 
-  sentryModule.withScope((scope) => {
+  Sentry.withScope((scope) => {
+    // Set level
+    scope.setLevel(level);
+
     // Add context
     Object.entries(context).forEach(([key, value]) => {
       scope.setExtra(key, value);
@@ -149,86 +152,44 @@ export function captureMessage(message, level = 'info', context = {}) {
       language: navigator.language,
     });
 
-    sentryModule.captureMessage(message, level);
+    Sentry.captureMessage(message);
   });
 }
 
 // Show consent dialog
 export function showConsentDialog(onAccept, onDecline) {
-  // Create overlay
-  const overlay = document.createElement('div');
-  overlay.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10000;
-  `;
+  // Get the dialog overlay from the DOM
+  const overlay = document.getElementById('telemetry-consent-overlay');
+  if (!overlay) {
+    console.warn('Telemetry consent dialog not found in DOM');
+    return;
+  }
 
-  // Create dialog
-  const dialog = document.createElement('div');
-  dialog.style.cssText = `
-    background: white;
-    border-radius: 8px;
-    padding: 24px;
-    max-width: 500px;
-    margin: 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  `;
+  // Show the dialog
+  overlay.classList.remove('hidden');
 
-  dialog.innerHTML = `
-    <h3 style="margin: 0 0 16px 0; font-size: 20px; font-weight: bold;">Help Improve Cerberus</h3>
-    <p style="margin: 0 0 16px 0; color: #666;">
-      The challenge validation failed. Would you like to send an anonymous error report to help us improve compatibility?
-    </p>
-    <p style="margin: 0 0 20px 0; font-size: 14px; color: #888;">
-      The report will only include:
-      <ul style="margin: 8px 0 0 20px; font-size: 14px; color: #888;">
-        <li>Browser capabilities (WebAssembly support, etc.)</li>
-        <li>Error type and challenge parameters</li>
-        <li>No personal information or IP addresses</li>
-      </ul>
-    </p>
-    <div style="display: flex; gap: 12px; justify-content: flex-end;">
-      <button id="decline-telemetry" style="
-        padding: 8px 16px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        background: white;
-        cursor: pointer;
-        font-size: 14px;
-      ">Don't Send</button>
-      <button id="accept-telemetry" style="
-        padding: 8px 16px;
-        border: none;
-        border-radius: 4px;
-        background: #b79ecf;
-        color: white;
-        cursor: pointer;
-        font-size: 14px;
-      ">Send Report</button>
-    </div>
-  `;
-
-  overlay.appendChild(dialog);
-  document.body.appendChild(overlay);
+  // Get buttons
+  const acceptButton = document.getElementById('telemetry-accept');
+  const declineButton = document.getElementById('telemetry-decline');
 
   // Handle accept
-  document.getElementById('accept-telemetry').onclick = () => {
+  const handleAccept = () => {
     setConsent(true);
-    document.body.removeChild(overlay);
+    overlay.classList.add('hidden');
+    acceptButton.removeEventListener('click', handleAccept);
+    declineButton.removeEventListener('click', handleDecline);
     if (onAccept) onAccept();
   };
 
   // Handle decline
-  document.getElementById('decline-telemetry').onclick = () => {
+  const handleDecline = () => {
     setConsent(false);
-    document.body.removeChild(overlay);
+    overlay.classList.add('hidden');
+    acceptButton.removeEventListener('click', handleAccept);
+    declineButton.removeEventListener('click', handleDecline);
     if (onDecline) onDecline();
   };
+
+  acceptButton.addEventListener('click', handleAccept);
+  declineButton.addEventListener('click', handleDecline);
 }

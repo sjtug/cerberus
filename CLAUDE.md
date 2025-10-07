@@ -70,10 +70,12 @@ devenv tasks run go:lint --mode before
   - `js/main.mjs`: Core frontend logic for PoW solving, UI updates, and form submission
   - `js/pow.mjs`: WebAssembly loader for blake3 PoW computation
   - `js/pow.worker.js`: Web Worker for non-blocking PoW computation
+  - `js/telemetry.mjs`: Optional Sentry integration for error telemetry with user consent
   - `js/assets.mjs`: Ensures all images are included in Vite manifest
   - `tests/`: Playwright e2e tests for UI and auth flow
   - `vite.config.mjs`: Builds and bundles frontend assets with manifest
 - **pow/**: Rust WASM module for blake3 PoW computation
+- **translations/**: i18n YAML files for multiple languages (en, zh)
 
 ### Key Design Patterns
 
@@ -95,6 +97,50 @@ devenv tasks run go:lint --mode before
 
 ### Configuration Compatibility
 When updating config via `Instance.UpdateWithConfig()`, state is reset only if incompatible (different TTLs, AccessPerApproval, MaxMemUsage, or PrefixCfg).
+
+### Telemetry System (Optional)
+
+Cerberus includes an optional telemetry system to track challenge failures and browser incompatibility issues using Sentry.
+
+**Design Principles**:
+- **Privacy-first**: No telemetry sent without explicit user consent
+- **Opt-in only**: Only enabled when configured in Caddy
+- **Minimal data**: Only browser capabilities, error types, and challenge parameters
+- **No PII**: IP addresses, cookies, and personal data are scrubbed
+
+**Architecture**:
+1. **Backend (Go)**:
+   - Configuration in `core/config.go`: `telemetry_enabled`, `telemetry_dsn`, `telemetry_environment`
+   - Initialization in `directives/app.go`: Sentry SDK setup with PII scrubbing
+   - Error capture helpers in `directives/common.go`: `CaptureError()`, `CaptureMessage()`
+   - Request correlation via UUID request IDs
+
+2. **Frontend (JavaScript)**:
+   - `web/js/telemetry.mjs`: Sentry integration with consent management
+   - Dynamic import from `@sentry/browser` npm package (loaded only when telemetry is enabled)
+   - Consent dialog in HTML template with i18n support
+   - LocalStorage for consent persistence
+
+**Events Captured**:
+- Backend: Challenge calculation failures, signature mismatches, JWT errors, validation failures
+- Frontend: WebAssembly errors, PoW computation errors, client-side exceptions
+- Note: IP blocking and normal validation failures are NOT captured (expected behavior)
+
+**Configuration Example**:
+```caddyfile
+{
+    cerberus {
+        telemetry_enabled true
+        telemetry_dsn "https://xxx@xxx.ingest.sentry.io/xxx"
+        telemetry_environment "production"
+    }
+}
+```
+
+**Bundle Size**:
+- When telemetry is **disabled**: Only ~3 KB wrapper code is bundled
+- When telemetry is **enabled**: Dynamically loads Sentry chunk (~365 KB / 123 KB gzipped) on first initialization
+- Trade-off: Smaller initial bundle for non-telemetry users, but dynamic import prevents tree-shaking (total size is larger than static import would be)
 
 ## Build Pipeline
 

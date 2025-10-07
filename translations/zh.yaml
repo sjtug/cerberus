@@ -37,6 +37,16 @@ zh:
     do_not_reload_too_often: >-
       您可以尝试解决问题（如果您知道如何解决）后重新加载页面，或者等待几秒钟后再刷新。但是请避免频繁刷新，因为这可能会导致您的 IP 地址被封禁。
     contact_us: "如您有任何疑问，请发邮件到 %{mail} 联系我们。随信请附下方显示的 Request ID，以便我们进行排查。"
+  telemetry:
+    dialog:
+      title: "帮助改进 Cerberus"
+      description: "验证失败。您是否愿意发送匿名错误报告以帮助我们改进兼容性？"
+      data_collected: "报告仅包含："
+      item_browser: "浏览器功能（WebAssembly 支持等）"
+      item_error: "错误类型和验证参数"
+      item_no_personal: "不包含个人信息或 IP 地址"
+      decline: "不发送"
+      accept: "发送报告"
   footer:
     author: "由 %{sjtug} 开发的 %{cerberus} 提供保护"
     upstream: "灵感来源于 🇨🇦 %{techaro} 开发的 %{anubis}"
