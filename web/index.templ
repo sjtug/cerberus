@@ -54,10 +54,7 @@ func GetMail(ctx context.Context) string {
 }
 
 func GetTelemetryConfig(ctx context.Context) TelemetryConfig {
-	if val := ctx.Value(TelemetryCtxKey); val != nil {
-		return val.(TelemetryConfig)
-	}
-	return TelemetryConfig{}
+	return ctx.Value(TelemetryCtxKey).(TelemetryConfig)
 }
 
 func GetRequestID(ctx context.Context) string {
