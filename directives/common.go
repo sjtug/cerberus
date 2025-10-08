@@ -50,11 +50,9 @@ func CaptureError(r *http.Request, err error, eventType string, extra map[string
 			"request_id": reqID,
 		})
 
-		// Add extra context if provided
-		if extra != nil {
-			for k, v := range extra {
-				scope.SetExtra(k, v)
-			}
+		// Add extra context values when provided
+		for k, v := range extra {
+			scope.SetExtra(k, v)
 		}
 	})
 
@@ -85,11 +83,9 @@ func CaptureMessage(r *http.Request, message string, level sentry.Level, eventTy
 			"request_id": reqID,
 		})
 
-		// Add extra context if provided
-		if extra != nil {
-			for k, v := range extra {
-				scope.SetExtra(k, v)
-			}
+		// Add extra context values when provided
+		for k, v := range extra {
+			scope.SetExtra(k, v)
 		}
 	})
 

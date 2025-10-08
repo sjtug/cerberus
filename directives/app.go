@@ -27,14 +27,14 @@ func (c *App) Provision(context caddy.Context) error {
 	}
 
 	// Initialize Sentry for backend telemetry if enabled
-	if c.Config.TelemetryEnabled && c.Config.TelemetryBackendDSN != "" {
+	if c.TelemetryEnabled && c.TelemetryBackendDSN != "" {
 		err := sentry.Init(sentry.ClientOptions{
-			Dsn:              c.Config.TelemetryBackendDSN,
-			Environment:      c.Config.TelemetryEnvironment,
+			Dsn:              c.TelemetryBackendDSN,
+			Environment:      c.TelemetryEnvironment,
 			SampleRate:       1.0, // Always capture all events (100%)
 			TracesSampleRate: 0,   // Disable tracing
 			AttachStacktrace: true,
-			BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+			BeforeSend: func(event *sentry.Event, _ *sentry.EventHint) *sentry.Event {
 				// Scrub any PII from the event
 				// Remove any IP addresses from the event
 				if event.User.IPAddress != "" {
@@ -53,11 +53,11 @@ func (c *App) Provision(context caddy.Context) error {
 		if err != nil {
 			context.Logger().Error("failed to initialize Sentry", zap.Error(err))
 			// Continue without telemetry rather than failing
-			c.Config.TelemetryEnabled = false
+			c.TelemetryEnabled = false
 		} else {
 			context.Logger().Info("telemetry initialized",
-				zap.String("environment", c.Config.TelemetryEnvironment),
-				zap.Float64("sample_rate", c.Config.TelemetrySampleRate))
+				zap.String("environment", c.TelemetryEnvironment),
+				zap.Float64("sample_rate", c.TelemetrySampleRate))
 		}
 	}
 
@@ -83,7 +83,7 @@ func (c *App) Start() error {
 
 func (c *App) Stop() error {
 	// Flush any pending Sentry events before shutdown
-	if c.Config.TelemetryEnabled {
+	if c.TelemetryEnabled {
 		sentry.Flush(2 * time.Second)
 	}
 	return nil
