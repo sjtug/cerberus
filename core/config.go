@@ -64,8 +64,10 @@ type Config struct {
 	PrefixCfg ipblock.Config `json:"prefix_cfg,omitempty"`
 	// TelemetryEnabled enables error telemetry collection when true.
 	TelemetryEnabled bool `json:"telemetry_enabled,omitempty"`
-	// TelemetryDSN is the Sentry DSN for error reporting.
-	TelemetryDSN string `json:"telemetry_dsn,omitempty"`
+	// TelemetryBackendDSN is the Sentry DSN used by the Go backend.
+	TelemetryBackendDSN string `json:"telemetry_backend_dsn,omitempty"`
+	// TelemetryFrontendDSN is the Sentry DSN used by the browser challenge flow.
+	TelemetryFrontendDSN string `json:"telemetry_frontend_dsn,omitempty"`
 	// TelemetryEnvironment is the environment name for telemetry (e.g., production, staging).
 	TelemetryEnvironment string `json:"telemetry_environment,omitempty"`
 	// TelemetrySampleRate is the sampling rate for non-error events (0.0 to 1.0).
@@ -114,15 +116,18 @@ func (c *Config) Provision(logger *zap.Logger) error {
 	}
 
 	// Set telemetry defaults
-	if c.TelemetryEnabled && c.TelemetryDSN == "" {
-		logger.Warn("telemetry enabled but no DSN provided, disabling telemetry")
-		c.TelemetryEnabled = false
-	}
-	if c.TelemetrySampleRate == 0 && c.TelemetryEnabled {
-		c.TelemetrySampleRate = 0.1 // Default 10% sampling for non-error events
-	}
-	if c.TelemetryEnvironment == "" && c.TelemetryEnabled {
-		c.TelemetryEnvironment = "production"
+	if c.TelemetryEnabled {
+		if c.TelemetryBackendDSN == "" && c.TelemetryFrontendDSN == "" {
+			logger.Warn("telemetry enabled but no DSN provided, disabling telemetry")
+			c.TelemetryEnabled = false
+		} else {
+			if c.TelemetrySampleRate == 0 {
+				c.TelemetrySampleRate = 0.1 // Default 10% sampling for non-error events
+			}
+			if c.TelemetryEnvironment == "" {
+				c.TelemetryEnvironment = "production"
+			}
+		}
 	}
 
 	if c.Ed25519KeyFile != "" || c.Ed25519Key != "" {

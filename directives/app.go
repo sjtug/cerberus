@@ -26,10 +26,10 @@ func (c *App) Provision(context caddy.Context) error {
 		return err
 	}
 
-	// Initialize Sentry if telemetry is enabled
-	if c.Config.TelemetryEnabled && c.Config.TelemetryDSN != "" {
+	// Initialize Sentry for backend telemetry if enabled
+	if c.Config.TelemetryEnabled && c.Config.TelemetryBackendDSN != "" {
 		err := sentry.Init(sentry.ClientOptions{
-			Dsn:              c.Config.TelemetryDSN,
+			Dsn:              c.Config.TelemetryBackendDSN,
 			Environment:      c.Config.TelemetryEnvironment,
 			SampleRate:       1.0, // Always capture all events (100%)
 			TracesSampleRate: 0,   // Disable tracing

@@ -180,15 +180,24 @@ func (c *App) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 				return d.Errf("telemetry_enabled must be a boolean")
 			}
 			c.TelemetryEnabled = enabled
-		case "telemetry_dsn":
+		case "telemetry_backend_dsn":
 			if !d.NextArg() {
 				return d.ArgErr()
 			}
 			dsn, ok := d.ScalarVal().(string)
 			if !ok {
-				return d.Errf("telemetry_dsn must be a string")
+				return d.Errf("telemetry_backend_dsn must be a string")
 			}
-			c.TelemetryDSN = dsn
+			c.TelemetryBackendDSN = dsn
+		case "telemetry_frontend_dsn":
+			if !d.NextArg() {
+				return d.ArgErr()
+			}
+			dsn, ok := d.ScalarVal().(string)
+			if !ok {
+				return d.Errf("telemetry_frontend_dsn must be a string")
+			}
+			c.TelemetryFrontendDSN = dsn
 		case "telemetry_environment":
 			if !d.NextArg() {
 				return d.ArgErr()

@@ -111,7 +111,7 @@ const handleError = (error, metaConfig) => {
   }
 
   // Capture error for telemetry if enabled
-  if (metaConfig?.telemetryDSN) {
+  if (metaConfig?.telemetryFrontendDSN) {
     const telemetryContext = {
       error_type: errorType,
       request_id: metaConfig.requestID,
@@ -137,7 +137,7 @@ const main = async () => {
   messages.locale = locale;
 
   // Initialize telemetry if configured
-  if (metaConfig.telemetryDSN) {
+  if (metaConfig.telemetryFrontendDSN) {
     await telemetry.initTelemetry(metaConfig);
   }
 

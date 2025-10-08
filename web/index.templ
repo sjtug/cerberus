@@ -20,7 +20,7 @@ const (
 )
 
 type TelemetryConfig struct {
-	DSN         string
+	FrontendDSN string
 	Environment string
 	SampleRate  float64
 }
@@ -136,13 +136,13 @@ templ Challenge(challenge string, difficulty int, nonce uint32, ts int64, signat
 		locale := GetLocale(ctx)
 		telemetryConfig := GetTelemetryConfig(ctx)
 		metaInput := struct {
-			BaseURL       string  `json:"baseURL"`
-			Locale        string  `json:"locale"`
-			TelemetryDSN  string  `json:"telemetryDSN,omitempty"`
-			TelemetryEnv  string  `json:"telemetryEnv,omitempty"`
-			TelemetryRate float64 `json:"telemetryRate,omitempty"`
-			RequestID     string  `json:"requestID"`
-		}{baseURL, locale, telemetryConfig.DSN, telemetryConfig.Environment, telemetryConfig.SampleRate, GetRequestID(ctx)}
+			BaseURL              string  `json:"baseURL"`
+			Locale               string  `json:"locale"`
+			TelemetryFrontendDSN string  `json:"telemetryFrontendDSN,omitempty"`
+			TelemetryEnv         string  `json:"telemetryEnv,omitempty"`
+			TelemetryRate        float64 `json:"telemetryRate,omitempty"`
+			RequestID            string  `json:"requestID"`
+		}{baseURL, locale, telemetryConfig.FrontendDSN, telemetryConfig.Environment, telemetryConfig.SampleRate, GetRequestID(ctx)}
 	}}
 	<div id="main-area" class="hidden">
 		<img id="mascot" src={ AssetPath(ctx, "img/mascot-puzzle.png") } alt="Cute anime mascot character" class="mx-auto p-4 mb-2 max-w-64"/>

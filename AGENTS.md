@@ -110,7 +110,7 @@ Cerberus includes an optional telemetry system to track challenge failures and b
 
 **Architecture**:
 1. **Backend (Go)**:
-   - Configuration in `core/config.go`: `telemetry_enabled`, `telemetry_dsn`, `telemetry_environment`
+   - Configuration in `core/config.go`: `telemetry_enabled`, `telemetry_backend_dsn`, `telemetry_frontend_dsn`, `telemetry_environment`
    - Initialization in `directives/app.go`: Sentry SDK setup with PII scrubbing
    - Error capture helpers in `directives/common.go`: `CaptureError()`, `CaptureMessage()`
    - Request correlation via UUID request IDs
@@ -131,7 +131,8 @@ Cerberus includes an optional telemetry system to track challenge failures and b
 {
     cerberus {
         telemetry_enabled true
-        telemetry_dsn "https://xxx@xxx.ingest.sentry.io/xxx"
+        telemetry_backend_dsn "https://backend@o123.ingest.sentry.io/1"
+        telemetry_frontend_dsn "https://frontend@o123.ingest.sentry.io/2"
         telemetry_environment "production"
     }
 }

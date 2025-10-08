@@ -18,7 +18,7 @@ const browserContext = {
 };
 
 export async function initTelemetry(config) {
-  if (!config || !config.telemetryDSN) {
+  if (!config || !config.telemetryFrontendDSN) {
     return false;
   }
 
@@ -39,7 +39,7 @@ export async function initTelemetry(config) {
     });
 
     sentryInit({
-      dsn: config.telemetryDSN,
+      dsn: config.telemetryFrontendDSN,
       debug: config.telemetryEnv === 'development',
       environment: config.telemetryEnv || 'production',
       sampleRate: typeof config.telemetryRate === 'number' ? config.telemetryRate : 1,

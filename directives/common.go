@@ -245,7 +245,7 @@ func setupManifest(r *http.Request) *http.Request {
 func renderTemplate(w http.ResponseWriter, r *http.Request, c *core.Config, baseURL string, header string, child templ.Component, opts ...func(*templ.ComponentHandler)) error {
 	telemetryConfig := web.TelemetryConfig{}
 	if c.TelemetryEnabled {
-		telemetryConfig.DSN = c.TelemetryDSN
+		telemetryConfig.FrontendDSN = c.TelemetryFrontendDSN
 		telemetryConfig.Environment = c.TelemetryEnvironment
 		telemetryConfig.SampleRate = c.TelemetrySampleRate
 	}
