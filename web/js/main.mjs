@@ -111,30 +111,13 @@ const handleError = (error, metaConfig) => {
   }
 
   // Capture error for telemetry if enabled
-  if (metaConfig && metaConfig.telemetryDSN) {
-    // Check if we should show consent dialog
-    if (!telemetry.hasConsent()) {
-      telemetry.showConsentDialog(
-        () => {
-          // User accepted, capture the error
-          telemetry.captureError(error, {
-            error_type: errorType,
-            user_agent: navigator.userAgent,
-            request_id: metaConfig.requestID,
-          });
-        },
-        () => {
-          // User declined, do nothing
-        },
-      );
-    } else {
-      // Already have consent, capture the error
-      telemetry.captureError(error, {
-        error_type: errorType,
-        user_agent: navigator.userAgent,
-        request_id: metaConfig.requestID,
-      });
-    }
+  if (metaConfig?.telemetryDSN) {
+    const telemetryContext = {
+      error_type: errorType,
+      request_id: metaConfig.requestID,
+    };
+
+    telemetry.captureError(error, telemetryContext);
   }
 };
 

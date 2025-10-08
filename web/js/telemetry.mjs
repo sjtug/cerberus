@@ -3,38 +3,55 @@
 let sentryInit = null;
 let sentryCaptureException = null;
 let sentryCaptureMessage = null;
+let sentryCaptureEvent = null;
 let sentryWithScope = null;
-let sentryBrowserTracingIntegration = null;
 
 let sentryInitialized = false;
-let consentGiven = false;
+let consentPromptActive = false;
 const pendingEvents = [];
 
-// Check if user has previously given consent
-export function hasConsent() {
+// Persisted consent helpers
+function readStoredConsent() {
   try {
     return localStorage.getItem('cerberus_telemetry_consent') === 'true';
-  } catch (e) {
-    // localStorage might not be available
+  } catch {
     return false;
   }
 }
 
-// Store user consent decision
-export function setConsent(granted) {
+function writeStoredConsent(granted) {
   try {
     if (granted) {
       localStorage.setItem('cerberus_telemetry_consent', 'true');
     } else {
       localStorage.removeItem('cerberus_telemetry_consent');
     }
-  } catch (e) {
-    // localStorage might not be available
+  } catch {
+    // Ignore storage errors
   }
-  consentGiven = granted;
+}
 
-  // If consent was granted and we have pending events, send them
-  if (granted && sentryInitialized && pendingEvents.length > 0) {
+const consentState = {
+  granted: readStoredConsent(),
+  sessionDeclined: false,
+};
+
+export function hasConsent() {
+  return consentState.granted;
+}
+
+export function setConsent(granted) {
+  consentState.granted = granted;
+  consentState.sessionDeclined = !granted;
+  consentPromptActive = false;
+  writeStoredConsent(granted);
+
+  if (!granted) {
+    pendingEvents.length = 0;
+    return;
+  }
+
+  if (sentryInitialized && pendingEvents.length > 0) {
     flushPendingEvents();
   }
 }
@@ -56,29 +73,22 @@ export async function initTelemetry(config) {
     sentryInit = sentryModule.init;
     sentryCaptureException = sentryModule.captureException;
     sentryCaptureMessage = sentryModule.captureMessage;
+    sentryCaptureEvent = sentryModule.captureEvent;
     sentryWithScope = sentryModule.withScope;
-    sentryBrowserTracingIntegration = sentryModule.browserTracingIntegration;
 
     sentryInit({
       dsn: config.telemetryDSN,
+      debug: config.telemetryEnv === 'development' ? true : false,
       environment: config.telemetryEnv || 'production',
       sampleRate: typeof config.telemetryRate === 'number' ? config.telemetryRate : 1,
-      integrations: [
-        sentryBrowserTracingIntegration(),
-      ],
-      tracesSampleRate: 0,  // Disable tracing to reduce bundle size
-      beforeSend: (event) => {
-        // Only send events if consent has been given
-        if (!consentGiven && !hasConsent()) {
-          // Store the error for later if user gives consent
-          pendingEvents.push({ type: 'error', error: event });
+      integrations: sentryModule.integrations,
+      tracesSampleRate: 0,  // Disable tracing
+      beforeSend: (event, hint) => {
+        sanitizeEvent(event);
+        if (!consentState.granted) {
+          pendingEvents.push({ event, hint });
+          showConsentDialog();
           return null;
-        }
-        // Remove any PII
-        if (event.user) {
-          delete event.user.ip_address;
-          delete event.user.email;
-          delete event.user.username;
         }
         return event;
       },
@@ -95,8 +105,7 @@ export async function initTelemetry(config) {
     });
 
     sentryInitialized = true;
-    consentGiven = hasConsent();
-    if (consentGiven && pendingEvents.length > 0) {
+    if (consentState.granted && pendingEvents.length > 0) {
       flushPendingEvents();
     }
     return true;
@@ -111,26 +120,8 @@ export function captureError(error, context = {}) {
   if (!sentryInitialized || !sentryCaptureException || !sentryWithScope) {
     return;
   }
-
-  if (!consentGiven && !hasConsent()) {
-    pendingEvents.push({ type: 'error', error, context });
-    return;
-  }
-
-  sentryWithScope((scope) => {
-    // Add context
-    Object.entries(context).forEach(([key, value]) => {
-      scope.setExtra(key, value);
-    });
-
-    // Capture browser capabilities
-    scope.setContext('browser', {
-      webassembly_supported: typeof WebAssembly !== 'undefined',
-      web_worker_supported: typeof Worker !== 'undefined',
-      user_agent: navigator.userAgent,
-      language: navigator.language,
-    });
-
+  withTelemetryScope(null, context, () => {
+    console.log("Capturing error", error);
     sentryCaptureException(error);
   });
 }
@@ -140,82 +131,111 @@ export function captureTelemetryMessage(message, level = 'info', context = {}) {
   if (!sentryInitialized || !sentryCaptureMessage || !sentryWithScope) {
     return;
   }
-
-  if (!consentGiven && !hasConsent()) {
-    pendingEvents.push({ type: 'message', message, level, context });
-    return;
-  }
-
-  sentryWithScope((scope) => {
-    // Set level
-    scope.setLevel(level);
-
-    // Add context
-    Object.entries(context).forEach(([key, value]) => {
-      scope.setExtra(key, value);
-    });
-
-    // Capture browser capabilities
-    scope.setContext('browser', {
-      webassembly_supported: typeof WebAssembly !== 'undefined',
-      web_worker_supported: typeof Worker !== 'undefined',
-      user_agent: navigator.userAgent,
-      language: navigator.language,
-    });
-
+  withTelemetryScope(level, context, () => {
     sentryCaptureMessage(message);
   });
 }
 
 // Show consent dialog
 export function showConsentDialog(onAccept, onDecline) {
-  // Get the dialog overlay from the DOM
-  const overlay = document.getElementById('telemetry-consent-overlay');
-  if (!overlay) {
-    console.warn('Telemetry consent dialog not found in DOM');
-    return;
+  if (consentState.sessionDeclined || consentPromptActive) {
+    return false;
   }
 
-  // Show the dialog
-  overlay.classList.remove('hidden');
-
-  // Get buttons
+  const overlay = document.getElementById('telemetry-consent-overlay');
   const acceptButton = document.getElementById('telemetry-accept');
   const declineButton = document.getElementById('telemetry-decline');
 
-  // Handle accept
-  const handleAccept = () => {
-    setConsent(true);
+  if (!overlay || !acceptButton || !declineButton) {
+    console.warn('Telemetry consent dialog not found in DOM');
+    return false;
+  }
+
+  const cleanup = () => {
     overlay.classList.add('hidden');
     acceptButton.removeEventListener('click', handleAccept);
     declineButton.removeEventListener('click', handleDecline);
+    consentPromptActive = false;
+  };
+
+  const handleAccept = () => {
+    setConsent(true);
+    cleanup();
     if (onAccept) onAccept();
   };
 
-  // Handle decline
   const handleDecline = () => {
     setConsent(false);
-    overlay.classList.add('hidden');
-    acceptButton.removeEventListener('click', handleAccept);
-    declineButton.removeEventListener('click', handleDecline);
+    cleanup();
     if (onDecline) onDecline();
   };
 
+  consentPromptActive = true;
+  overlay.classList.remove('hidden');
   acceptButton.addEventListener('click', handleAccept);
   declineButton.addEventListener('click', handleDecline);
+
+  return true;
 }
 
 function flushPendingEvents() {
-  if (!sentryInitialized) {
+  if (!sentryInitialized || !sentryCaptureEvent) {
     return;
   }
 
-  pendingEvents.forEach((event) => {
-    if (event.type === 'error') {
-      sentryCaptureException?.(event.error);
-    } else if (event.type === 'message') {
-      sentryCaptureMessage?.(event.message);
-    }
+  pendingEvents.forEach(({ event, hint }) => {
+    sentryCaptureEvent(event, hint);
   });
   pendingEvents.length = 0;
+}
+
+function sanitizeEvent(event) {
+  if (!event) {
+    return;
+  }
+
+  if (event.user) {
+    delete event.user.ip_address;
+    delete event.user.email;
+    delete event.user.username;
+  }
+}
+
+function withTelemetryScope(level, context, callback) {
+  sentryWithScope((scope) => {
+    if (typeof level === 'string' && level) {
+      scope.setLevel(level);
+    }
+
+    Object.entries(context || {}).forEach(([key, value]) => {
+      scope.setExtra(key, value);
+    });
+
+    scope.setContext('browser', getBrowserContext());
+
+    callback(scope);
+  });
+}
+
+const browserContext = {
+  webassembly_supported: typeof WebAssembly !== 'undefined',
+  web_worker_supported: typeof Worker !== 'undefined',
+  user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+  language: typeof navigator !== 'undefined' ? navigator.language : 'unknown',
+};
+
+function getBrowserContext() {
+  return browserContext;
+}
+
+function stripSentryCaptured(hint) {
+  if (!hint || (typeof hint !== 'object' && typeof hint !== 'function') || !hint.originalException) {
+    return hint;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(hint.originalException, '__sentry_captured__')) {
+    console.log("Stripping __sentry_captured__", hint.originalException);
+    delete hint.originalException.__sentry_captured__;
+  }
+  return hint;
 }
