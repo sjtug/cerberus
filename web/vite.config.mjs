@@ -15,6 +15,7 @@ export default defineConfig({
   base: "",
   build: {
     manifest: true,
+    sourcemap: true,
     rollupOptions: {
       input: [
         "./js/main.mjs",
