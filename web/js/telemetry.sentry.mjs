@@ -1,5 +1,3 @@
-import { globalHandlersIntegration } from '@sentry/browser';
-
 export {
   init,
   captureException,
@@ -8,16 +6,20 @@ export {
   withScope,
 } from '@sentry/browser';
 
-export const integrations = (is) =>
-  is
-    .filter((i) => i.name !== "Dedupe" && i.name !== "GlobalHandlers")
-    .map((i) => {
-      console.log("Integration", i.name);
-      return i;
-    });
-    // .concat([
-    //   globalHandlersIntegration({
-    //     onerror: false,
-    //     onunhandledrejection: true,
-    //   }),
-    // ]);
+export function createConsentIntegration({ ensureConsent }) {
+  return {
+    name: 'CerberusConsentGate',
+    setupOnce() {
+      // No setup required; gating lives in processEvent.
+    },
+    async processEvent(event) {
+      try {
+        const allowed = await ensureConsent();
+        return allowed ? event : null;
+      } catch (error) {
+        console.warn('Telemetry consent integration failed, dropping event', error);
+        return null;
+      }
+    },
+  };
+}

@@ -32,7 +32,7 @@ func (c *App) Provision(context caddy.Context) error {
 			Dsn:              c.Config.TelemetryDSN,
 			Environment:      c.Config.TelemetryEnvironment,
 			SampleRate:       1.0, // Always capture all events (100%)
-			TracesSampleRate: 1.0, // Always capture all traces (100%)
+			TracesSampleRate: 0,   // Disable tracing
 			AttachStacktrace: true,
 			BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
 				// Scrub any PII from the event
