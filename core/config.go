@@ -122,7 +122,7 @@ func (c *Config) Provision(logger *zap.Logger) error {
 			c.TelemetryEnabled = false
 		} else {
 			if c.TelemetrySampleRate == 0 {
-				c.TelemetrySampleRate = 0.1 // Default 10% sampling for non-error events
+				c.TelemetrySampleRate = 1
 			}
 			if c.TelemetryEnvironment == "" {
 				c.TelemetryEnvironment = "production"
