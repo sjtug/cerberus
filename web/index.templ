@@ -94,7 +94,7 @@ templ Base(title string, header string) {
 				</div>
 			</footer>
 			<!-- Telemetry Consent Dialog (hidden by default) -->
-			<div id="telemetry-consent-overlay" class="hidden fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-[10000]">
+			<div id="telemetry-consent-overlay" class="hidden fixed top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center z-[10000]">
 				<div class="bg-white rounded-lg p-6 max-w-lg mx-5 shadow-lg">
 					<h3 class="text-xl font-bold mb-4">@T("telemetry.dialog.title")</h3>
 					<p class="mb-4 text-gray-700">
@@ -112,7 +112,7 @@ templ Base(title string, header string) {
 						<button id="telemetry-decline" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 text-sm">
 							@T("telemetry.dialog.decline")
 						</button>
-						<button id="telemetry-accept" class="px-4 py-2 bg-[#b79ecf] text-white rounded hover:bg-[#a88dc0] text-sm">
+						<button id="telemetry-accept" class="px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700 text-sm">
 							@T("telemetry.dialog.accept")
 						</button>
 					</div>

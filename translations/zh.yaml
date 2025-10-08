@@ -40,11 +40,11 @@ zh:
   telemetry:
     dialog:
       title: "帮助改进 Cerberus"
-      description: "验证失败。您是否愿意发送匿名错误报告以帮助我们改进兼容性？"
+      description: "这次未能完成验证。您是否愿意发送一份匿名错误报告，帮助我们让 Cerberus 更好地适配您的浏览器？"
       data_collected: "报告仅包含："
       item_browser: "浏览器功能（WebAssembly 支持等）"
       item_error: "错误类型和验证参数"
-      item_no_personal: "不包含个人信息或 IP 地址"
+      item_no_personal: "不会上传任何可识别您身份的信息（例如 IP 地址或个人资料）"
       decline: "不发送"
       accept: "发送报告"
   footer:

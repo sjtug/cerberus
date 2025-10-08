@@ -39,11 +39,11 @@ en:
   telemetry:
     dialog:
       title: "Help Improve Cerberus"
-      description: "The challenge validation failed. Would you like to send an anonymous error report to help us improve compatibility?"
+      description: "We couldn't complete the challenge this time. Would you mind sending an anonymous error report so we can make Cerberus work better with your browser?"
       data_collected: "The report will only include:"
       item_browser: "Browser capabilities (WebAssembly support, etc.)"
       item_error: "Error type and challenge parameters"
-      item_no_personal: "No personal information or IP addresses"
+      item_no_personal: "Nothing that can identify you (no IP address or personal details)"
       decline: "Don't Send"
       accept: "Send Report"
   footer:
