@@ -34,8 +34,10 @@
 		mail "admin@example.com"
 		# Telemetry is disabled by default; set to true and provide a DSN/environment to enable Sentry reporting.
 		telemetry_enabled false
-		# telemetry_dsn "https://xxx@xxx.ingest.sentry.io/xxx"
-		# telemetry_environment "production"
+		telemetry_backend_dsn "https://xxx@xxx.ingest.sentry.io/xxx"
+		telemetry_frontend_dsn "https://xxx@xxx.ingest.sentry.io/xxx"
+		telemetry_environment "production"
+		telemetry_sample_rate 1
 		# PrefixCfg is to configure prefixes used to block users in these IP prefix blocks, e.g., /24 /64.
 		# The first argument is for IPv4 and the second is for IPv6.
 		prefix_cfg 20 64
