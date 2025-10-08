@@ -19,7 +19,6 @@ export default defineConfig({
     rollupOptions: {
       input: [
         "./js/main.mjs",
-        "./js/telemetry.mjs",
         "./js/assets.mjs",
         "./global.css",
       ],
