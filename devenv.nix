@@ -1,6 +1,10 @@
-{ pkgs, ... }:
+{ inputs, pkgs, ... }:
 
 {
+  overlays = [
+    (import inputs.rust-overlay)
+  ];
+
   # https://devenv.sh/packages/
   packages = with pkgs; [
     git
@@ -30,10 +34,17 @@
       pnpm = "${pkgs.nodePackages.pnpm}/bin/pnpm";
       golangci-lint = "${pkgs.golangci-lint}/bin/golangci-lint";
       node = "${pkgs.nodejs}/bin/node";
+      rust-toolchain = pkgs.rust-bin.selectLatestNightlyWith (
+        toolchain:
+        toolchain.minimal.override {
+          extensions = [ "rust-src" ];
+          targets = [ "wasm32-unknown-unknown" ];
+        }
+      );
     in
     {
       "wasm:build".exec = ''
-        PATH=${pkgs.cargo}/bin:${pkgs.rustc}/bin:${pkgs.lld}/bin:$PATH ${wasm-pack} build --target web ./pow --no-default-features
+        PATH="${rust-toolchain}/bin:$PATH" ${wasm-pack} build --target web ./pow --no-default-features -Z build-std=panic_abort,std
       '';
       "js:install" = {
         exec = ''
