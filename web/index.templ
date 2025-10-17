@@ -16,7 +16,14 @@ const (
 	LocaleCtxKey
 	ManifestCtxKey
 	MailCtxKey
+	TelemetryCtxKey
 )
+
+type TelemetryConfig struct {
+	FrontendDSN string
+	Environment string
+	SampleRate  float64
+}
 
 templ T(key string, args ...any) {
 	{ i18n.T(ctx, key, args...) }
@@ -44,6 +51,10 @@ func GetManifest(ctx context.Context) Manifest {
 
 func GetMail(ctx context.Context) string {
 	return ctx.Value(MailCtxKey).(string)
+}
+
+func GetTelemetryConfig(ctx context.Context) TelemetryConfig {
+	return ctx.Value(TelemetryCtxKey).(TelemetryConfig)
 }
 
 func GetRequestID(ctx context.Context) string {
@@ -82,6 +93,31 @@ templ Base(title string, header string) {
 					</p>
 				</div>
 			</footer>
+			<!-- Telemetry Consent Dialog (hidden by default) -->
+			<div id="telemetry-consent-overlay" class="hidden fixed top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center z-[10000]">
+				<div class="bg-white rounded-lg p-6 max-w-lg mx-5 shadow-lg">
+					<h3 class="text-xl font-bold mb-4">@T("telemetry.dialog.title")</h3>
+					<p class="mb-4 text-gray-700">
+						@T("telemetry.dialog.description")
+					</p>
+					<p class="mb-5 text-sm text-gray-600">
+						@T("telemetry.dialog.data_collected")
+					</p>
+					<ul class="mb-5 ml-5 list-disc text-sm text-gray-600 space-y-1">
+						<li>@T("telemetry.dialog.item_browser")</li>
+						<li>@T("telemetry.dialog.item_error")</li>
+						<li>@T("telemetry.dialog.item_no_personal")</li>
+					</ul>
+					<div class="flex gap-3 justify-end">
+						<button id="telemetry-decline" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 text-sm">
+							@T("telemetry.dialog.decline")
+						</button>
+						<button id="telemetry-accept" class="px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700 text-sm">
+							@T("telemetry.dialog.accept")
+						</button>
+					</div>
+				</div>
+			</div>
 		</body>
 	</html>
 }
@@ -98,10 +134,15 @@ templ Challenge(challenge string, difficulty int, nonce uint32, ts int64, signat
 
 		baseURL := GetBaseURL(ctx)
 		locale := GetLocale(ctx)
+		telemetryConfig := GetTelemetryConfig(ctx)
 		metaInput := struct {
-			BaseURL string `json:"baseURL"`
-			Locale  string `json:"locale"`
-		}{baseURL, locale}
+			BaseURL              string  `json:"baseURL"`
+			Locale               string  `json:"locale"`
+			TelemetryFrontendDSN string  `json:"telemetryFrontendDSN,omitempty"`
+			TelemetryEnv         string  `json:"telemetryEnv,omitempty"`
+			TelemetryRate        float64 `json:"telemetryRate,omitempty"`
+			RequestID            string  `json:"requestID"`
+		}{baseURL, locale, telemetryConfig.FrontendDSN, telemetryConfig.Environment, telemetryConfig.SampleRate, GetRequestID(ctx)}
 	}}
 	<div id="main-area" class="hidden">
 		<img id="mascot" src={ AssetPath(ctx, "img/mascot-puzzle.png") } alt="Cute anime mascot character" class="mx-auto p-4 mb-2 max-w-64"/>

@@ -1,11 +1,24 @@
+import { serializeError } from './worker-error.mjs';
 import { initSync, process_task } from "pow-wasm";
 
+function sendError(error) {
+    postMessage({
+        type: 'error',
+        error: serializeError(error),
+    });
+}
+
 addEventListener('message', (event) => {
-    // NOTE errors are not bubbled up if you change this to async
     try {
-        initSync({ module: event.data.wasmModule });
-    } catch (e) {
-        throw new Error("Failed to initialize WebAssembly module", { cause: e });
+        try {
+            initSync({ module: event.data.wasmModule });
+        } catch (error) {
+            throw new Error("Failed to initialize WebAssembly module", { cause: error });
+        }
+
+        process_task(event.data.data, event.data.difficulty, event.data.nonce, event.data.threads);
+    } catch (error) {
+        sendError(error);
+        close();
     }
-    process_task(event.data.data, event.data.difficulty, event.data.nonce, event.data.threads);
 });

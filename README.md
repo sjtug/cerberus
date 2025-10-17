@@ -46,6 +46,38 @@ xcaddy build --with github.com/sjtug/cerberus@dist
 
 Check [Caddyfile](Caddyfile) for an example configuration.
 
+## Telemetry (Optional)
+
+Cerberus ships with an opt-in telemetry system to help operators understand challenge failures without collecting personal data. Telemetry is disabled by default.
+
+### Privacy & Consent
+
+- Telemetry never starts unless it is explicitly enabled in the Caddy configuration.
+- Visitors are shown a consent dialog before any browser data is sent; only anonymous error metadata is collected after consent.
+- Both backend and frontend integrations scrub cookies, IP addresses, and other personally identifying information before it leaves the server or browser.
+- Operators should disclose telemetry usage in their own privacy documentation so users know what data is collected and why.
+
+### Enabling Telemetry
+
+1. Obtain Sentry DSNs for backend and frontend reporting (they can point to the same project). Sentry provides a [free tier](https://sentry.io/pricing/) for small projects.
+2. Enable telemetry in your global Caddy block and provide the DSNs and an environment label:
+
+   ```caddyfile
+   {
+       cerberus {
+           telemetry_enabled true
+           telemetry_backend_dsn "https://backend@example.ingest.sentry.io/1"
+           telemetry_frontend_dsn "https://frontend@example.ingest.sentry.io/2"
+           telemetry_environment "production"
+       }
+   }
+   ```
+
+3. Reload Caddy so the Cerberus app can initialise the telemetry client.
+4. Verify the consent dialog appears in the Cerberus challenge page and that events respect user consent.
+
+Disabling telemetry again is as simple as setting `telemetry_enabled false` (or removing the block entirely) and reloading Caddy.
+
 ## Roadmap
 
 - [x] More frequent challenges (each solution only grants a few accesses)
