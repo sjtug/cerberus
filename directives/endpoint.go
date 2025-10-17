@@ -4,6 +4,7 @@ import (
 	"crypto/subtle"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -194,11 +195,19 @@ func (e *Endpoint) ServeHTTP(w http.ResponseWriter, r *http.Request, _ caddyhttp
 		return err
 	}
 
+	c := e.instance
+
+	if ipBlock, err := ipblock.NewIPBlock(net.ParseIP(getClientIP(r)), c.PrefixCfg); err == nil {
+		caddyhttp.SetVar(r.Context(), core.VarIPBlock, ipBlock)
+		if c.ContainsBlocklist(ipBlock) {
+			e.logger.Debug("IP is blocked", zap.String("ip", ipBlock.ToIPNet(c.PrefixCfg).String()))
+			return respondFailure(w, r, &c.Config, "", true, http.StatusForbidden, ".")
+		}
+	}
+
 	if tryServeFile(w, r) {
 		return nil
 	}
-
-	c := e.instance
 
 	path := strings.TrimSuffix(r.URL.Path, "/")
 	if path == "/answer" && r.Method == http.MethodPost {
