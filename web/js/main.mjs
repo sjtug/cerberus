@@ -91,6 +91,7 @@ const handleError = (error) => {
   if (error.message && error.message.includes("Failed to initialize WebAssembly module")) {
     ui.message(t('error.must_enable_wasm'));
     ui.description(t('error.apologize_please_enable_wasm'));
+    console.error(error);
   } else {
     ui.message(t('error.client_error'));
     ui.description(t('error.browser_config_or_bug'));
@@ -121,6 +122,8 @@ const main = async () => {
 
   const likelihood = Math.pow(16, -difficulty / 2);
 
+  let totalIters = 0;
+
   const mergedChallenge = `${challenge}|${inputNonce}|${ts}|${signature}|`;
   const { hash, nonce: solution } = await pow(mergedChallenge, difficulty, null, (iters) => {
     // the probability of still being on the page is (1 - likelihood) ^ iters.
@@ -128,7 +131,8 @@ const main = async () => {
     // apply a polynomial ease-out function to move faster in the beginning
     // and then slow down as things get increasingly unlikely. quadratic felt
     // the best in testing, but this may need adjustment in the future.
-    const probability = Math.pow(1 - likelihood, iters);
+    totalIters += iters;
+    const probability = Math.pow(1 - likelihood, totalIters);
     const distance = (1 - Math.pow(probability, 2)) * 100;
 
     // Update progress every 200ms
@@ -136,7 +140,7 @@ const main = async () => {
     const delta = now - t0;
 
     if (delta - lastUpdate > 200) {
-      const speed = iters / delta;
+      const speed = totalIters / delta;
       ui.progress(distance);
       ui.metrics(t('challenge.difficulty_speed', { difficulty, speed: speed.toFixed(3) }));
       ui.progressMessage(probability < 0.01 ? t('challenge.taking_longer') : undefined);
