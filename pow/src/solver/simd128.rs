@@ -19,6 +19,20 @@ static LANE_ID_STR_COMBINED_LE_HI: Align64<[u32; 1000]> = {
     Align64(out)
 };
 
+#[expect(dead_code)]
+mod static_asserts {
+    use super::*;
+
+    const ASSERT_LANE_ID_STR_COMBINED_LE_HI_0: [(); 1] =
+        [(); (LANE_ID_STR_COMBINED_LE_HI.0[0] == u32::from_be_bytes(*b"000\x00")) as usize];
+
+    const ASSERT_LANE_ID_STR_COMBINED_LE_HI_1: [(); 1] =
+        [(); (LANE_ID_STR_COMBINED_LE_HI.0[1] == u32::from_be_bytes(*b"100\x00")) as usize];
+
+    const ASSERT_LANE_ID_STR_COMBINED_LE_HI_123: [(); 1] =
+        [(); (LANE_ID_STR_COMBINED_LE_HI.0[123] == u32::from_be_bytes(*b"321\x00")) as usize];
+}
+
 /// SIMD128 Ceberus solver.
 ///
 /// Current implementation: 9-digit out-of-order kernel with 4 way SIMD with quarter-round hotstart granularity.
