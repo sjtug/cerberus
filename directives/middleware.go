@@ -9,6 +9,7 @@ import (
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
+	"github.com/getsentry/sentry-go"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/invopop/ctxi18n/i18n"
@@ -68,6 +69,12 @@ func (m *Middleware) invokeAuth(w http.ResponseWriter, r *http.Request) error {
 	challenge, err := challengeFor(r, c)
 	if err != nil {
 		m.logger.Error("failed to calculate challenge", zap.Error(err))
+		// Capture implementation error
+		if c.TelemetryEnabled {
+			CaptureError(r, err, "challenge_calculation_failed", map[string]interface{}{
+				"user_agent": r.UserAgent(),
+			})
+		}
 		return err
 	}
 
@@ -84,6 +91,13 @@ func (m *Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next cadd
 	r = setupManifest(r)
 	r, err := setupLocale(r)
 	if err != nil {
+		c := m.instance
+		// Capture locale setup error
+		if c.TelemetryEnabled {
+			CaptureError(r, err, "locale_setup_failed", map[string]interface{}{
+				"accept_language": r.Header.Get("Accept-Language"),
+			})
+		}
 		return err
 	}
 
@@ -121,6 +135,12 @@ func (m *Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next cadd
 	}, jwt.WithValidMethods([]string{jwt.SigningMethodEdDSA.Alg()}))
 	if err != nil {
 		m.logger.Debug("invalid token", zap.Error(err))
+		// Capture JWT parsing errors (could indicate signature verification issues)
+		if c.TelemetryEnabled {
+			CaptureError(r, err, "jwt_parse_failed", map[string]interface{}{
+				"user_agent": r.UserAgent(),
+			})
+		}
 	}
 
 	if err := validateToken(token); err != nil {
@@ -160,11 +180,23 @@ func (m *Middleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next cadd
 	expected, err := challengeFor(r, c)
 	if err != nil {
 		m.logger.Error("failed to calculate challenge", zap.Error(err))
+		// Capture implementation error
+		if c.TelemetryEnabled {
+			CaptureError(r, err, "challenge_calculation_failed", map[string]interface{}{
+				"user_agent": r.UserAgent(),
+			})
+		}
 		return err
 	}
 
 	if challenge != expected {
 		m.logger.Debug("challenge mismatch", zap.String("expected", expected), zap.String("actual", challenge))
+		// Capture potential browser incompatibility or implementation error
+		if c.TelemetryEnabled {
+			CaptureMessage(r, "Challenge mismatch in cookie validation", sentry.LevelError, "challenge_mismatch", map[string]interface{}{
+				"user_agent": r.UserAgent(),
+			})
+		}
 		return m.invokeAuth(w, r)
 	}
 

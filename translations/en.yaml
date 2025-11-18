@@ -36,6 +36,16 @@ en:
     do_not_reload_too_often: >-
       You can try fixing the underlying issue (if you know how) and then reload the page, or simply wait a few seconds before refreshing. However, avoid reloading too frequently as this may cause your IP address to be blocked.
     contact_us: "If you believe this is an error or have any questions, please contact us at %{mail}. Please kindly attach the request ID shown below to help us investigate."
+  telemetry:
+    dialog:
+      title: "Help Improve Cerberus"
+      description: "We couldn't complete the challenge this time. Would you mind sending an anonymous error report so we can make Cerberus work better with your browser?"
+      data_collected: "The report will only include:"
+      item_browser: "Browser capabilities (WebAssembly support, etc.)"
+      item_error: "Error type and challenge parameters"
+      item_no_personal: "Nothing that can identify you (no IP address or personal details)"
+      decline: "Don't Send"
+      accept: "Send Report"
   footer:
     author: Protected by %{cerberus} from %{sjtug}.
     upstream: Heavily inspired by %{anubis} from %{techaro} in 🇨🇦.

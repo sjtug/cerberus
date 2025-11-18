@@ -170,6 +170,56 @@ func (c *App) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 				return d.Errf("mail must be a string")
 			}
 			c.Mail = mail
+		case "telemetry_enabled":
+			if !d.NextArg() {
+				c.TelemetryEnabled = true
+				continue
+			}
+			enabled, ok := d.ScalarVal().(bool)
+			if !ok {
+				return d.Errf("telemetry_enabled must be a boolean")
+			}
+			c.TelemetryEnabled = enabled
+		case "telemetry_backend_dsn":
+			if !d.NextArg() {
+				return d.ArgErr()
+			}
+			dsn, ok := d.ScalarVal().(string)
+			if !ok {
+				return d.Errf("telemetry_backend_dsn must be a string")
+			}
+			c.TelemetryBackendDSN = dsn
+		case "telemetry_frontend_dsn":
+			if !d.NextArg() {
+				return d.ArgErr()
+			}
+			dsn, ok := d.ScalarVal().(string)
+			if !ok {
+				return d.Errf("telemetry_frontend_dsn must be a string")
+			}
+			c.TelemetryFrontendDSN = dsn
+		case "telemetry_environment":
+			if !d.NextArg() {
+				return d.ArgErr()
+			}
+			env, ok := d.ScalarVal().(string)
+			if !ok {
+				return d.Errf("telemetry_environment must be a string")
+			}
+			c.TelemetryEnvironment = env
+		case "telemetry_sample_rate":
+			if !d.NextArg() {
+				return d.ArgErr()
+			}
+			sampleVal := d.ScalarVal()
+			switch v := sampleVal.(type) {
+			case float64:
+				c.TelemetrySampleRate = v
+			case int:
+				c.TelemetrySampleRate = float64(v)
+			default:
+				return d.Errf("telemetry_sample_rate must be a number between 0 and 1")
+			}
 		default:
 			return d.Errf("unknown subdirective '%s'", d.Val())
 		}

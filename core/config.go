@@ -62,6 +62,16 @@ type Config struct {
 	Mail string `json:"mail,omitempty"`
 	// PrefixCfg is to configure prefixes used to block users in these IP prefix blocks, e.g., /24 /64.
 	PrefixCfg ipblock.Config `json:"prefix_cfg,omitempty"`
+	// TelemetryEnabled enables error telemetry collection when true.
+	TelemetryEnabled bool `json:"telemetry_enabled,omitempty"`
+	// TelemetryBackendDSN is the Sentry DSN used by the Go backend.
+	TelemetryBackendDSN string `json:"telemetry_backend_dsn,omitempty"`
+	// TelemetryFrontendDSN is the Sentry DSN used by the browser challenge flow.
+	TelemetryFrontendDSN string `json:"telemetry_frontend_dsn,omitempty"`
+	// TelemetryEnvironment is the environment name for telemetry (e.g., production, staging).
+	TelemetryEnvironment string `json:"telemetry_environment,omitempty"`
+	// TelemetrySampleRate is the sampling rate for non-error events (0.0 to 1.0).
+	TelemetrySampleRate float64 `json:"telemetry_sample_rate,omitempty"`
 
 	ed25519Key ed25519.PrivateKey
 	ed25519Pub ed25519.PublicKey
@@ -102,6 +112,21 @@ func (c *Config) Provision(logger *zap.Logger) error {
 		c.PrefixCfg = ipblock.Config{
 			V4Prefix: DefaultIPV4Prefix,
 			V6Prefix: DefaultIPV6Prefix,
+		}
+	}
+
+	// Set telemetry defaults
+	if c.TelemetryEnabled {
+		if c.TelemetryBackendDSN == "" && c.TelemetryFrontendDSN == "" {
+			logger.Warn("telemetry enabled but no DSN provided, disabling telemetry")
+			c.TelemetryEnabled = false
+		} else {
+			if c.TelemetrySampleRate == 0 {
+				c.TelemetrySampleRate = 1
+			}
+			if c.TelemetryEnvironment == "" {
+				c.TelemetryEnvironment = "production"
+			}
 		}
 	}
 
@@ -164,6 +189,9 @@ func (c *Config) Validate() error {
 	}
 	if err := ipblock.ValidateConfig(c.PrefixCfg); err != nil {
 		return fmt.Errorf("prefix_cfg: %w", err)
+	}
+	if c.TelemetrySampleRate < 0 || c.TelemetrySampleRate > 1 {
+		return errors.New("telemetry_sample_rate must be between 0.0 and 1.0")
 	}
 
 	return nil

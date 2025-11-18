@@ -11,6 +11,7 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
+	"github.com/getsentry/sentry-go"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/invopop/ctxi18n"
@@ -24,6 +25,75 @@ const (
 	IV1 = "/L4y6KgWa8vHEujU3O6JyI8osQxwh1nE0Eoay4nD3vw/y36eSFT0s/GTGfrngN6+"
 	IV2 = "KHo5hHR3ZfisR7xeG1gJwO3LSc1cYyDUQ5+StoAjV8jLhp01NBNi4joHYTWXDqF0"
 )
+
+// CaptureError captures an error with context for telemetry
+func CaptureError(r *http.Request, err error, eventType string, extra map[string]interface{}) {
+	// Get request ID if available
+	reqID := ""
+	if id := caddyhttp.GetVar(r.Context(), core.VarReqID); id != nil {
+		reqID = id.(string)
+	}
+
+	// Create a new hub with the request context
+	hub := sentry.GetHubFromContext(r.Context())
+	if hub == nil {
+		hub = sentry.CurrentHub().Clone()
+	}
+
+	// Set request context
+	hub.ConfigureScope(func(scope *sentry.Scope) {
+		scope.SetRequest(r)
+		scope.SetTag("event_type", eventType)
+		scope.SetTag("request_id", reqID)
+		scope.SetContext("cerberus", map[string]interface{}{
+			"event_type": eventType,
+			"request_id": reqID,
+		})
+
+		// Add extra context values when provided
+		for k, v := range extra {
+			scope.SetExtra(k, v)
+		}
+	})
+
+	hub.CaptureException(err)
+}
+
+// CaptureMessage captures a message with context for telemetry
+func CaptureMessage(r *http.Request, message string, level sentry.Level, eventType string, extra map[string]interface{}) {
+	// Get request ID if available
+	reqID := ""
+	if id := caddyhttp.GetVar(r.Context(), core.VarReqID); id != nil {
+		reqID = id.(string)
+	}
+
+	// Create a new hub with the request context
+	hub := sentry.GetHubFromContext(r.Context())
+	if hub == nil {
+		hub = sentry.CurrentHub().Clone()
+	}
+
+	// Set request context
+	hub.ConfigureScope(func(scope *sentry.Scope) {
+		scope.SetRequest(r)
+		scope.SetTag("event_type", eventType)
+		scope.SetTag("request_id", reqID)
+		scope.SetContext("cerberus", map[string]interface{}{
+			"event_type": eventType,
+			"request_id": reqID,
+		})
+
+		// Add extra context values when provided
+		for k, v := range extra {
+			scope.SetExtra(k, v)
+		}
+	})
+
+	hub.WithScope(func(scope *sentry.Scope) {
+		scope.SetLevel(level)
+		hub.CaptureMessage(message)
+	})
+}
 
 func clearCookie(w http.ResponseWriter, cookieName string) {
 	http.SetCookie(w, &http.Cookie{
@@ -169,15 +239,26 @@ func setupManifest(r *http.Request) *http.Request {
 }
 
 func renderTemplate(w http.ResponseWriter, r *http.Request, c *core.Config, baseURL string, header string, child templ.Component, opts ...func(*templ.ComponentHandler)) error {
+	telemetryConfig := web.TelemetryConfig{}
+	if c.TelemetryEnabled {
+		telemetryConfig.FrontendDSN = c.TelemetryFrontendDSN
+		telemetryConfig.Environment = c.TelemetryEnvironment
+		telemetryConfig.SampleRate = c.TelemetrySampleRate
+	}
+
 	ctx := templ.WithChildren(
 		context.WithValue(
 			context.WithValue(
-				context.WithValue(r.Context(), web.BaseURLCtxKey, baseURL),
-				web.VersionCtxKey,
-				core.Version,
+				context.WithValue(
+					context.WithValue(r.Context(), web.BaseURLCtxKey, baseURL),
+					web.VersionCtxKey,
+					core.Version,
+				),
+				web.MailCtxKey,
+				c.Mail,
 			),
-			web.MailCtxKey,
-			c.Mail,
+			web.TelemetryCtxKey,
+			telemetryConfig,
 		),
 		child,
 	)

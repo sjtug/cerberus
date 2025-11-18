@@ -1,8 +1,12 @@
 package directives
 
 import (
+	"time"
+
 	"github.com/caddyserver/caddy/v2"
+	"github.com/getsentry/sentry-go"
 	"github.com/sjtug/cerberus/core"
+	"go.uber.org/zap"
 )
 
 // App is the global configuration for cerberus.
@@ -20,6 +24,41 @@ func (c *App) Provision(context caddy.Context) error {
 	err := c.Config.Provision(context.Logger())
 	if err != nil {
 		return err
+	}
+
+	// Initialize Sentry for backend telemetry if enabled
+	if c.TelemetryEnabled && c.TelemetryBackendDSN != "" {
+		err := sentry.Init(sentry.ClientOptions{
+			Dsn:              c.TelemetryBackendDSN,
+			Environment:      c.TelemetryEnvironment,
+			SampleRate:       1.0, // Always capture all events (100%)
+			TracesSampleRate: 0,   // Disable tracing
+			AttachStacktrace: true,
+			BeforeSend: func(event *sentry.Event, _ *sentry.EventHint) *sentry.Event {
+				// Scrub any PII from the event
+				// Remove any IP addresses from the event
+				if event.User.IPAddress != "" {
+					event.User.IPAddress = ""
+				}
+				// Remove sensitive headers
+				if event.Request != nil {
+					delete(event.Request.Headers, "Cookie")
+					delete(event.Request.Headers, "Authorization")
+					delete(event.Request.Headers, "X-Forwarded-For")
+					delete(event.Request.Headers, "X-Real-IP")
+				}
+				return event
+			},
+		})
+		if err != nil {
+			context.Logger().Error("failed to initialize Sentry", zap.Error(err))
+			// Continue without telemetry rather than failing
+			c.TelemetryEnabled = false
+		} else {
+			context.Logger().Info("telemetry initialized",
+				zap.String("environment", c.TelemetryEnvironment),
+				zap.Float64("sample_rate", c.TelemetrySampleRate))
+		}
 	}
 
 	context.Logger().Debug("cerberus instance provision")
@@ -43,6 +82,10 @@ func (c *App) Start() error {
 }
 
 func (c *App) Stop() error {
+	// Flush any pending Sentry events before shutdown
+	if c.TelemetryEnabled {
+		sentry.Flush(2 * time.Second)
+	}
 	return nil
 }
 
