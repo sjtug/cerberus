@@ -89,7 +89,7 @@ func (e *Endpoint) answerHandle(w http.ResponseWriter, r *http.Request) error {
 		e.logger.Info("solution is empty")
 		return respondFailure(w, r, &c.Config, "solution is empty", false, http.StatusBadRequest, ".")
 	}
-	solution, err := strconv.Atoi(solutionStr)
+	solution, err := strconv.ParseUint(solutionStr, 10, 64)
 	if err != nil {
 		e.logger.Debug("solution is not a integer", zap.Error(err))
 		return respondFailure(w, r, &c.Config, "solution is not a integer", false, http.StatusBadRequest, ".")
@@ -110,7 +110,13 @@ func (e *Endpoint) answerHandle(w http.ResponseWriter, r *http.Request) error {
 		return respondFailure(w, r, &c.Config, "signature mismatch", false, http.StatusForbidden, ".")
 	}
 
-	answer, err := blake3sum(fmt.Sprintf("%s|%d|%d|%s|%d", challenge, nonce, ts, signature, solution))
+	saltStr, err := blake3sum(fmt.Sprintf("%s|%d|%d|%s|", challenge, nonce, ts, signature))
+	if err != nil {
+		e.logger.Error("failed to calculate salt", zap.Error(err))
+		return err
+	}
+
+	answer, err := blake3Prf(saltStr, solution)
 	if err != nil {
 		e.logger.Error("failed to calculate answer", zap.Error(err))
 		return err

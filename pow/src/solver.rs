@@ -18,7 +18,7 @@ pub trait Solver {
     ///
     /// Failure is usually because the key space is exhausted (or presumed exhausted).
     /// It should by design happen extremely rarely for common difficulty settings.
-    fn solve<P: FnMut(u32)>(&mut self, mask: u32, progress: P) -> Option<(u64, [u32; 8])>;
+    fn solve<P: FnMut(u32)>(&mut self, mask: u32, progress: P) -> Option<([u32; 2], [u32; 8])>;
 }
 
 #[cfg(test)]
@@ -47,50 +47,43 @@ pub(crate) mod tests {
         }
     }
 
-    pub(crate) fn test_cerberus_validator<S: Solver, F: for<'a> FnMut(&'a [u8]) -> Option<S>>(
+    pub(crate) fn test_cerberus_validator<
+        S: Solver,
+        F: for<'a> FnMut(&'a [u8; 64]) -> Option<S>,
+    >(
         mut factory: F,
     ) {
-        use std::io::Write;
-
-        for df in 5..=7 {
+        for df in 6..=8 {
             let mask = crate::compute_mask_cerberus(df.try_into().unwrap());
-            eprintln!("mask: {:08x}", mask);
 
-            let test_seed: [u8; 128] = core::array::from_fn(|i| b'a'.wrapping_add(i as u8));
+            let test_seed: [u8; 64] = core::array::from_fn(|i| b'a'.wrapping_add(i as u8));
 
-            for seed_len in 0..128 {
-                let Some(mut solver) = factory(&test_seed[..seed_len]) else {
-                    panic!("solver is None for seed_len: {}", seed_len);
-                };
+            let Some(mut solver) = factory(&test_seed) else {
+                panic!("solver is None for seed");
+            };
 
-                let (nonce, hash) = solver.solve(mask, |_| {}).unwrap();
-                let mut msg = test_seed[..seed_len].to_vec();
-                write!(&mut msg, "{}", nonce).unwrap();
-
-                let mut ref_hasher = blake3::Hasher::new();
-                ref_hasher.update(msg.as_slice());
-                let ref_hash = ref_hasher.finalize();
-                let ref_hash_bytes = ref_hash.as_bytes();
-                let ref_hash = core::array::from_fn(|i| {
-                    u32::from_le_bytes([
-                        ref_hash_bytes[i * 4],
-                        ref_hash_bytes[i * 4 + 1],
-                        ref_hash_bytes[i * 4 + 2],
-                        ref_hash_bytes[i * 4 + 3],
-                    ])
-                });
-                let hit = (ref_hash[0] & mask) == 0;
-                assert_eq!(
-                    hash, ref_hash,
-                    "incorrect output: {} (seed_len: {})",
-                    nonce, seed_len
-                );
-                assert!(hit);
-                assert!(legacy_check_dubit::check_leading_zero_dubits(df as usize)(
-                    &ref_hash_bytes,
-                    df as usize
-                ));
-            }
+            let (nonce, hash) = solver.solve(mask, |_| {}).unwrap();
+            let mut ref_hasher = ::blake3::Hasher::new();
+            ref_hasher.update(&test_seed);
+            let final_nonce = (nonce[0] as u64 | (nonce[1] as u64) << 32).to_le_bytes();
+            ref_hasher.update(&final_nonce);
+            let ref_hash = ref_hasher.finalize();
+            let ref_hash_bytes = ref_hash.as_bytes();
+            let ref_hash = core::array::from_fn(|i| {
+                u32::from_le_bytes([
+                    ref_hash_bytes[i * 4],
+                    ref_hash_bytes[i * 4 + 1],
+                    ref_hash_bytes[i * 4 + 2],
+                    ref_hash_bytes[i * 4 + 3],
+                ])
+            });
+            let hit = (ref_hash[0] & mask) == 0;
+            assert_eq!(hash, ref_hash, "incorrect output: {:?}", nonce);
+            assert!(hit);
+            assert!(legacy_check_dubit::check_leading_zero_dubits(df as usize)(
+                &ref_hash_bytes,
+                df as usize
+            ));
         }
     }
 }

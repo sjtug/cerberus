@@ -48,30 +48,6 @@ fn encode_hex_le(out: &mut [u8; 64], inp: [u32; 8]) {
     }
 }
 
-#[repr(align(64))]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-/// Align to 64 bytes
-pub struct Align64<T>(pub T);
-
-impl<T> From<T> for Align64<T> {
-    fn from(value: T) -> Self {
-        Align64(value)
-    }
-}
-
-impl<T> core::ops::Deref for Align64<T> {
-    type Target = T;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl<T> core::ops::DerefMut for Align64<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
 fn worker_global_scope() -> DedicatedWorkerGlobalScope {
     let global = js_sys::global();
     global.dyn_into().expect("not running in a web worker")
@@ -80,7 +56,6 @@ fn worker_global_scope() -> DedicatedWorkerGlobalScope {
 #[derive(Debug, Serialize)]
 struct Resp {
     hash: String,
-    data: String,
     difficulty: u32,
     nonce: u64,
 }
@@ -91,130 +66,41 @@ fn start() {
 }
 
 /// A message in the cerberus format
-///
-/// Note cerberus official solver only supports 32-bit range nonces, but the validator accepts machine sized nonces and should always remain inter-block
-///
-/// Construct: Proof := (prefix || ASCII_GO_INT_DECIMAL(nonce))
 #[derive(Debug, Clone)]
 pub struct CerberusMessage {
-    pub(crate) prefix_state: [u32; 8],
-    pub(crate) salt_residual: [u8; 64],
-    pub(crate) salt_residual_len: usize,
-    pub(crate) flags: u32,
-    pub(crate) nonce_addend: u64,
+    pub(crate) midstate: [u32; 8],
+    pub(crate) batch_id: u32,
 }
 
 impl CerberusMessage {
+    /// The flags for the trailing block
+    pub const fn trailing_block_flags(&self) -> u32 {
+        blake3::FLAG_CHUNK_END | blake3::FLAG_ROOT
+    }
+
     /// Create a new Ceberus message
-    ///
-    /// End-to-end salt construction: `${challenge}|${inputNonce}|${ts}|${signature}|`
-    pub fn new(salt: &[u8], mut working_set: u32) -> Option<Self> {
-        // nonce placement in blake3 is less important than sha256, both early and late salts have strategies to elide computation.
-        //
-        // so we will keep it in 32-bit range just in case we met a 32-bit server, but in practice this is rarely seen.
-        //
-        // u32::MAX is 4294967295 (10 digits), we will pop the first digit as outer loop and at most 3 other blocks need to be mutated
-        // the last block is byte-order sensitive and needs a left shift to fix
-
-        // actual tree-based hashing is not supported yet, it kicks in at 1024 bytes
-        // we can leave 24 bytes of headroom for nonce maneuvering.
-        //
-        // Currently a typical challenge is 128 bytes or so, we are not near the 1024 byte threshold yet
-        if salt.len() > 1000 {
-            return None;
-        }
-        let mut chunks = salt.chunks_exact(64);
-        let mut prefix_state = blake3::IV;
-        let mut flags = blake3::FLAG_CHUNK_START | blake3::FLAG_CHUNK_END | blake3::FLAG_ROOT;
-
-        for (i, block) in (&mut chunks).enumerate() {
-            let block = core::array::from_fn(|i| {
-                u32::from_le_bytes([
-                    block[i * 4],
-                    block[i * 4 + 1],
-                    block[i * 4 + 2],
-                    block[i * 4 + 3],
-                ])
-            });
-            let this_flag = if i == 0 { blake3::FLAG_CHUNK_START } else { 0 };
-
-            let output = blake3::compress8(&prefix_state, &block, 0, 64, this_flag);
-            prefix_state.copy_from_slice(&output);
-            flags &= !blake3::FLAG_CHUNK_START;
-        }
-        let remainder = chunks.remainder();
-        let mut salt_residual = [0; 64];
-        salt_residual[..remainder.len()].copy_from_slice(remainder);
-        let mut ptr = remainder.len();
-
-        let mut nonce_addend = 0;
-        // TODO: figure out how to search more than 9G of nonce space for the edge case of 54 bytes modulo 64
-        // this is far from the typical case for Cerberus so not very important (even the official solver only searches 4G of nonce space)
-        if remainder.len() >= 55 {
-            // not enough room for 9 digits, assume 64-bit server and pad generously
-            let head_digit = (working_set % 8) as u8 + 1; // i64::MAX starts with 9 so we can only use 1-8 as head digit
-            nonce_addend = head_digit as u64;
-            salt_residual[remainder.len()] = head_digit as u8 + b'0';
-            working_set /= 8;
-            for x in (remainder.len() + 1)..64 {
-                let digit = working_set % 10;
-                salt_residual[x] = digit as u8 + b'0';
-                nonce_addend *= 10;
-                nonce_addend += digit as u64;
-                working_set /= 10;
-            }
-            ptr = 0;
-            let block = core::array::from_fn(|i| {
-                u32::from_le_bytes([
-                    salt_residual[i * 4],
-                    salt_residual[i * 4 + 1],
-                    salt_residual[i * 4 + 2],
-                    salt_residual[i * 4 + 3],
-                ])
-            });
-
-            let output = blake3::compress8(
-                &prefix_state,
-                &block,
-                0,
-                64,
-                blake3::FLAG_CHUNK_START & flags,
-            );
-            prefix_state.copy_from_slice(&output);
-            flags &= !blake3::FLAG_CHUNK_START;
-            salt_residual.fill(0);
+    pub fn new(salt: &[u8; 64], thread_id: u32) -> Option<Self> {
+        let mut init_block = [0; 16];
+        for i in 0..16 {
+            init_block[i] = u32::from_le_bytes([
+                salt[i * 4],
+                salt[i * 4 + 1],
+                salt[i * 4 + 2],
+                salt[i * 4 + 3],
+            ]);
         }
 
-        let head_digit = (working_set % 9) as u8 + 1;
-        salt_residual[ptr] = head_digit as u8 + b'0';
-        nonce_addend *= 10;
-        nonce_addend += head_digit as u64;
-        working_set /= 9;
-        while working_set != 0 {
-            ptr += 1;
-            let digit = working_set % 10;
-            salt_residual[ptr] = digit as u8 + b'0';
-            nonce_addend *= 10;
-            nonce_addend += digit as u64;
-            working_set /= 10;
-        }
-
-        if ptr + 9 >= 64 {
-            return None;
-        }
-
-        ptr += 1;
-
-        for i in 0..9 {
-            salt_residual[ptr + i] = b'0';
-        }
+        let midstate = blake3::compress8(
+            &blake3::IV,
+            &init_block,
+            0,
+            salt.len() as u32,
+            blake3::FLAG_CHUNK_START,
+        );
 
         Some(Self {
-            prefix_state,
-            salt_residual_len: ptr,
-            salt_residual,
-            flags,
-            nonce_addend: nonce_addend * 1_000_000_000,
+            midstate,
+            batch_id: thread_id,
         })
     }
 }
@@ -228,8 +114,11 @@ pub fn process_task(data: &str, difficulty: u32, thread_id: u32, threads: u32) {
 
     let mut set = thread_id;
 
+    let salt_hex = ::blake3::hash(data.as_bytes()).to_hex();
+
     loop {
-        let Some(message) = CerberusMessage::new(data.as_bytes(), set) else {
+        let Some(message) = CerberusMessage::new(salt_hex.as_bytes().try_into().unwrap(), set)
+        else {
             return;
         };
         let mut solver = CerberusSolver::from(message);
@@ -248,14 +137,12 @@ pub fn process_task(data: &str, difficulty: u32, thread_id: u32, threads: u32) {
             }
         };
 
-        let attempt = format!("{}{}", data, nonce);
         let mut hash_hex = [0; 64];
         encode_hex_le(&mut hash_hex, hash);
         let resp = Resp {
             hash: String::from_utf8(hash_hex.to_vec()).unwrap(),
-            data: attempt,
             difficulty,
-            nonce,
+            nonce: nonce[1] as u64 | (nonce[0] as u64) << 32,
         };
         worker
             .post_message(

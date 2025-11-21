@@ -129,53 +129,12 @@ fn round_fixed(state: &mut [u32; 16], m: &[u32; 16], round: usize) {
     );
 }
 
-#[inline(always)]
 #[cfg_attr(
     not(all(target_arch = "wasm32", target_feature = "simd128")),
     allow(unused, reason = "for SIMD128 only")
 )]
-pub fn round_gated(state: &mut [u32; 16], m: &[u32]) {
-    debug_assert!(m.len() <= 16);
-    // Mix the columns.
-    if m.len() >= 2 {
-        g(state, 0, 4, 8, 12, m[0], m[1]);
-    }
-    if m.len() >= 4 {
-        g(state, 1, 5, 9, 13, m[2], m[3]);
-    }
-    if m.len() >= 6 {
-        g(state, 2, 6, 10, 14, m[4], m[5]);
-    }
-    if m.len() >= 8 {
-        g(state, 3, 7, 11, 15, m[6], m[7]);
-    }
-    // Mix the diagonals.
-    if m.len() >= 10 {
-        g(state, 0, 5, 10, 15, m[8], m[9]);
-    }
-    if m.len() >= 12 {
-        g(state, 1, 6, 11, 12, m[10], m[11]);
-    }
-    if m.len() >= 14 {
-        g(state, 2, 7, 8, 13, m[12], m[13]);
-    }
-    if m.len() == 16 {
-        g(state, 3, 4, 9, 14, m[14], m[15]);
-    }
-}
-
-#[cfg_attr(
-    not(all(target_arch = "wasm32", target_feature = "simd128")),
-    allow(unused, reason = "for SIMD128 only")
-)]
-pub fn ingest_message_prefix(
-    state: [u32; 8],
-    m: &[u32],
-    counter: u64,
-    block_len: u32,
-    flags: u32,
-) -> [u32; 16] {
-    let mut full_state = [
+pub const fn setup_block(state: [u32; 8], counter: u64, block_len: u32, flags: u32) -> [u32; 16] {
+    [
         state[0],
         state[1],
         state[2],
@@ -192,9 +151,7 @@ pub fn ingest_message_prefix(
         0,
         block_len,
         flags,
-    ];
-    round_gated(&mut full_state, m);
-    full_state
+    ]
 }
 
 #[inline(always)]
@@ -217,7 +174,7 @@ pub fn compress8(
     ];
     let block = *block_words;
 
-    repeat7!(i, {
+    repeat!(7; i, {
         round_fixed(&mut state, &block, i);
     });
 
