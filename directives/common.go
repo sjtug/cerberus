@@ -91,8 +91,8 @@ func blake3Prf(prefix string, nonce uint64) (string, error) {
 		return "", err
 	}
 	var nonceBytes [8]byte
-	binary.LittleEndian.PutUint32(nonceBytes[:4], uint32(nonce>>32))
-	binary.LittleEndian.PutUint32(nonceBytes[4:], uint32(nonce))
+	swappedNonce := (nonce << 32) | (nonce >> 32)
+	binary.LittleEndian.PutUint64(nonceBytes[:], swappedNonce)
 	_, err = hash.Write(nonceBytes[:])
 	if err != nil {
 		return "", err
