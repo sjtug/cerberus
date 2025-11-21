@@ -12,6 +12,9 @@
     templ
     golangci-lint
     wasm-pack
+    wabt
+    moreutils
+    jq
     playwright-test
   ];
 
@@ -33,7 +36,10 @@
       wasm-pack = "${pkgs.wasm-pack}/bin/wasm-pack";
       pnpm = "${pkgs.nodePackages.pnpm}/bin/pnpm";
       golangci-lint = "${pkgs.golangci-lint}/bin/golangci-lint";
+      wasm-validate = "${pkgs.wabt}/bin/wasm-validate";
       node = "${pkgs.nodejs}/bin/node";
+      jq = "${pkgs.jq}/bin/jq";
+      sponge = "${pkgs.moreutils}/bin/sponge";
       rust-toolchain = pkgs.rust-bin.selectLatestNightlyWith (
         toolchain:
         toolchain.minimal.override {
@@ -43,15 +49,48 @@
       );
     in
     {
-      "wasm:build".exec = ''
-        PATH="${rust-toolchain}/bin:$PATH" ${wasm-pack} build --target web ./pow --no-default-features -Z build-std=panic_abort,std
+      "wasm:build-mvp".exec = ''
+        PATH="${rust-toolchain}/bin:$PATH" \
+        RUSTFLAGS="-Ctarget-cpu=mvp" \
+        ${wasm-pack} build --target web -d pkg-mvp --out-name pow_mvp ./pow --no-default-features -Z build-std=panic_abort,std
+
+        ${wasm-validate} ./pow/pkg-mvp/pow_mvp_bg.wasm \
+          --disable-mutable-globals \
+          --disable-saturating-float-to-int \
+          --disable-sign-extension \
+          --disable-multi-value \
+          --disable-bulk-memory \
+          --disable-reference-types \
+          --disable-simd
+
+        ${jq} '.name = "pow-wasm-mvp"' pow/pkg-mvp/package.json | ${sponge} pow/pkg-mvp/package.json
       '';
+
+      "wasm:build-simd".exec = ''
+        PATH="${rust-toolchain}/bin:$PATH" \
+        RUSTFLAGS="-Ctarget-cpu=mvp -Ctarget-feature=+simd128" \
+        ${wasm-pack} build --target web -d pkg-simd --out-name pow_simd ./pow --no-default-features -Z build-std=panic_abort,std
+
+        ${wasm-validate} ./pow/pkg-simd/pow_simd_bg.wasm \
+          --disable-mutable-globals \
+          --disable-saturating-float-to-int \
+          --disable-sign-extension \
+          --disable-multi-value \
+          --disable-bulk-memory \
+          --disable-reference-types
+
+        ${jq} '.name = "pow-wasm-simd"' pow/pkg-simd/package.json | ${sponge} pow/pkg-simd/package.json
+      '';
+
       "js:install" = {
         exec = ''
           cd web
           ${pnpm} install
         '';
-        after = [ "wasm:build" ];
+        after = [
+          "wasm:build-mvp"
+          "wasm:build-simd"
+        ];
       };
       "js:bundle" = {
         exec = ''
