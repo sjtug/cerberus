@@ -1,4 +1,4 @@
-import { initSync, process_task } from "pow-wasm";
+import { initSync, process_task } from "pow-wasm-mvp";
 
 addEventListener('message', (event) => {
     // NOTE errors are not bubbled up if you change this to async

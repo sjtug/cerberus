@@ -13,11 +13,11 @@ default = ["console_error_panic_hook"]
 [dependencies]
 wasm-bindgen = "0.2"
 js-sys = "0.3"
+blake3 = { version = "1.8", default-features = false }
 web-sys = { version = "0.3", features = [
     "Worker",
     "DedicatedWorkerGlobalScope",
 ] }
-blake3 = { version = "1.8", default-features = false }
 serde = { version = "1.0", features = ["derive"] }
 serde-wasm-bindgen = "0.6"
 # The `console_error_panic_hook` crate provides better debugging of panics by
@@ -25,15 +25,12 @@ serde-wasm-bindgen = "0.6"
 # all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
 # code size when deploying.
 console_error_panic_hook = { version = "0.1.7", optional = true }
-hex = "0.4.3"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.34"
 
 [profile.release]
-# Tell `rustc` to optimize for small code size.
-opt-level = "s"
-lto = true
+opt-level = 3
 
 [package.metadata.wasm-pack.profile.release]
-wasm-opt = ["--mvp-features", "-Oz"]
+wasm-opt = ["--mvp-features", "-O4"]

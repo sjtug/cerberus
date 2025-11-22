@@ -20,9 +20,12 @@ importers:
       glob:
         specifier: ^11.0.3
         version: 11.0.3
-      pow-wasm:
-        specifier: file:../pow/pkg
-        version: pow@file:../pow/pkg
+      pow-wasm-mvp:
+        specifier: file:../pow/pkg-mvp
+        version: file:../pow/pkg-mvp
+      pow-wasm-simd:
+        specifier: file:../pow/pkg-simd
+        version: file:../pow/pkg-simd
       tailwindcss:
         specifier: ^4.1.12
         version: 4.1.12
@@ -1798,8 +1801,11 @@ packages:
     resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
 
-  pow@file:../pow/pkg:
-    resolution: {directory: ../pow/pkg, type: directory}
+  pow-wasm-mvp@file:../pow/pkg-mvp:
+    resolution: {directory: ../pow/pkg-mvp, type: directory}
+
+  pow-wasm-simd@file:../pow/pkg-simd:
+    resolution: {directory: ../pow/pkg-simd, type: directory}
 
   prepend-http@1.0.4:
     resolution: {integrity: sha512-PhmXi5XmoyKw1Un4E+opM2KcsJInDvKyuOumcjjw3waw86ZNjHwVUOOWLc4bCzLdcKNaWBH9e99sbWzDQsVaYg==}
@@ -3891,7 +3897,9 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  pow@file:../pow/pkg: {}
+  pow-wasm-mvp@file:../pow/pkg-mvp: {}
+
+  pow-wasm-simd@file:../pow/pkg-simd: {}
 
   prepend-http@1.0.4: {}
 

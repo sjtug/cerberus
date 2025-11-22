@@ -13,7 +13,8 @@
     "@messageformat/core": "^3.4.0",
     "@messageformat/runtime": "^3.0.1",
     "glob": "^11.0.3",
-    "pow-wasm": "file:../pow/pkg",
+    "pow-wasm-mvp": "file:../pow/pkg-mvp",
+    "pow-wasm-simd": "file:../pow/pkg-simd",
     "tailwindcss": "^4.1.12",
     "yaml": "^2.8.1"
   },

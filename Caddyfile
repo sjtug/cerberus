@@ -6,7 +6,7 @@
 	# Global configuration for cerberus.
 	cerberus {
 		# Challenge difficulty (number of leading zeroes in the hash).
-		difficulty 12
+		difficulty 14
 		# When set to true, the handler will drop the connection instead of returning a 403 if the IP is blocked.
 		# drop
 		# Ed25519 signing key file path. If not provided, a new key will be generated.

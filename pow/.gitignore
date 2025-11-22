@@ -3,4 +3,6 @@
 Cargo.lock
 bin/
 pkg/
+pkg-mvp/
+pkg-simd/
 wasm-pack.log

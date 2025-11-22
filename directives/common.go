@@ -3,6 +3,7 @@ package directives
 import (
 	"context"
 	"crypto/ed25519"
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -73,6 +74,26 @@ func validateToken(token *jwt.Token) error {
 func blake3sum(text string) (string, error) {
 	hash := blake3.New()
 	_, err := hash.WriteString(text)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(hash.Sum(nil)), nil
+}
+
+// blake3Prf calculates the PRF output for a given challenge prefix and nonce.
+//
+// The expected prefix is 64 bytes of hex-encoded blake3 hash.
+// The nonce is a 64-bit integer (word ordering is swapped to accomodate JS number mantissa limits).
+func blake3Prf(prefix string, nonce uint64) (string, error) {
+	hash := blake3.New()
+	_, err := hash.WriteString(prefix)
+	if err != nil {
+		return "", err
+	}
+	var nonceBytes [8]byte
+	swappedNonce := (nonce << 32) | (nonce >> 32)
+	binary.LittleEndian.PutUint64(nonceBytes[:], swappedNonce)
+	_, err = hash.Write(nonceBytes[:])
 	if err != nil {
 		return "", err
 	}
