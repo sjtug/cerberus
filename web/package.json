@@ -11,18 +11,18 @@
   "dependencies": {
     "@messageformat/convert": "^1.0.0",
     "@messageformat/core": "^3.4.0",
-    "@messageformat/runtime": "^3.0.1",
-    "glob": "^11.0.3",
+    "@messageformat/runtime": "^3.0.2",
+    "glob": "^11.1.0",
     "pow-wasm-mvp": "file:../pow/pkg-mvp",
     "pow-wasm-simd": "file:../pow/pkg-simd",
-    "tailwindcss": "^4.1.12",
+    "tailwindcss": "^4.1.17",
     "yaml": "^2.8.1"
   },
   "devDependencies": {
-    "@playwright/test": "=1.54.1",
-    "@tailwindcss/vite": "^4.1.12",
-    "@types/node": "^24.3.1",
-    "vite": "^6.3.5",
+    "@playwright/test": "^1.54.1",
+    "@tailwindcss/vite": "^4.1.17",
+    "@types/node": "^24.10.1",
+    "vite": "^6.4.1",
     "vite-plugin-imagemin": "^0.6.1"
   }
 }
