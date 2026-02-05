@@ -1,0 +1,41 @@
+ko:
+  challenge:
+    title: "봇이 아닌지 확인하고 있습니다!"
+    calculating: "브라우저 확인 중..."
+    difficulty_speed: "난이도: %{difficulty}, 속도: %{speed}kH/s"
+    taking_longer: "예상보다 시간이 오래 걸리고 있습니다. 페이지를 새로 고침하지 마세요."
+    why_seeing: "이 페이지가 표시되는 이유는 무엇인가요?"
+    why_seeing_body:
+      part_1: >-
+        웹사이트 관리자가 악성 트래픽으로부터 서버를 보호하기 위해 %{cerberus}를 설정했기 때문에 이 화면이 표시됩니다. 악성 트래픽은 웹사이트 다운타임을 유발하여 모든 사용자가 리소스에 접근할 수 없게 만들 수 있습니다.
+      part_2: >-
+        %{techaro}의 %{anubis}에 익숙하다면 Cerberus도 비슷합니다. 요청을 검증하기 위해 작업 증명(PoW) 챌린지를 수행합니다. Anubis가 AI 스크래퍼로부터 웹사이트를 보호하는 데 중점을 둔다면, Cerberus는 오픈 소스 인프라를 보호하기 위해 훨씬 더 강력한 접근 방식을 취합니다.
+      part_3: >-
+        Cerberus는 %{jshelter}와 같은 플러그인이 비활성화할 수 있는 최신 JavaScript 기능을 필요로 합니다. 이 도메인에 대해 %{jshelter} 또는 기타 유사한 플러그인을 비활성화해 주십시오.
+  success:
+    title: "성공!"
+    verification_complete: "인증 완료!"
+    took_time_iterations: "소요 시간: %{time}ms, 반복 횟수: %{iterations}회"
+  error:
+    error_occurred: "앗! 문제가 발생했습니다"
+    server_error: "서버에서 처리할 수 없는 오류를 반환했습니다."
+    client_error: "검증 중 예상치 못한 오류가 발생했습니다."
+    access_restricted: "접근이 제한되었습니다."
+    must_enable_wasm: "계속하려면 WebAssembly를 활성화해 주세요."
+    apologize_please_enable_wasm: >-
+      브라우저 설정이나 확장 프로그램으로 인해 WebAssembly가 비활성화되어 있습니다. 일부 브라우저(예: 잠금 모드를 사용하는 Safari)는 기본적으로 WebAssembly를 비활성화하는 것으로 알려져 있습니다.
+      불편을 드려 죄송하지만, 계속하려면 WebAssembly를 다시 활성화해 주십시오.
+    browser_config_or_bug: "브라우저 구성 문제이거나 서버 측의 문제일 수 있습니다. 문의 시 오류 세부 정보를 첨부해 주세요."
+    error_details: "오류 세부 정보: %{error}"
+    ip_blocked: "의심스러운 활동으로 인해 귀하(또는 귀하의 로컬 네트워크)가 차단되었습니다."
+    wait_before_retry: "잠시 후 다시 시도해 주세요. 경우에 따라 몇 시간이 걸릴 수도 있습니다."
+    must_enable_js: "계속하려면 JavaScript를 활성화해야 합니다."
+    what_should_i_do: "어떻게 해야 하나요?"
+    apologize_please_enable_js: >-
+      브라우저 설정이나 확장 프로그램으로 인해 JavaScript가 비활성화되어 있습니다. 불편을 드려 죄송하지만, 계속하려면 JavaScript를 다시 활성화해 주십시오.
+    do_not_reload_too_often: >-
+      근본적인 원인을 해결한 후(방법을 아는 경우) 페이지를 새로 고치거나, 몇 초 기다린 후 새로 고침해 보세요. 단, 너무 자주 새로 고침하면 IP 주소가 차단될 수 있으니 주의해 주세요.
+    contact_us: "이것이 오류라고 생각되거나 질문이 있는 경우 %{mail}로 문의해 주세요. 조사를 돕기 위해 아래 표시된 요청 ID를 함께 첨부해 주시기 바랍니다."
+  footer:
+    author: "%{sjtug}의 %{cerberus}에 의해 보호됩니다."
+    upstream: "🇨🇦 %{techaro}의 %{anubis}에서 많은 영감을 받았습니다."
