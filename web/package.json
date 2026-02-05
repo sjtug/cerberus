@@ -15,13 +15,13 @@
     "glob": "^11.1.0",
     "pow-wasm-mvp": "file:../pow/pkg-mvp",
     "pow-wasm-simd": "file:../pow/pkg-simd",
-    "tailwindcss": "^4.1.17",
-    "yaml": "^2.8.1"
+    "tailwindcss": "^4.1.18",
+    "yaml": "^2.8.2"
   },
   "devDependencies": {
-    "@playwright/test": "^1.54.1",
-    "@tailwindcss/vite": "^4.1.17",
-    "@types/node": "^24.10.1",
+    "@playwright/test": "~1.57.0",
+    "@tailwindcss/vite": "^4.1.18",
+    "@types/node": "^24.10.11",
     "vite": "^6.4.1",
     "vite-plugin-imagemin": "^0.6.1"
   }
