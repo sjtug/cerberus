@@ -4,6 +4,7 @@ en:
     calculating: "Performing browser checks..."
     difficulty_speed: "Difficulty: %{difficulty}, Speed: %{speed}kH/s"
     taking_longer: "This is taking longer than expected. Please do not refresh the page."
+    wasm_unavailable: "Your browser does not support WebAssembly. Computation may be slower."
     why_seeing: "Why am I seeing this?"
     why_seeing_body:
       part_1: >-
@@ -21,10 +22,6 @@ en:
     server_error: "Server returned an error that we cannot handle."
     client_error: "Unexpected error occurred during verification."
     access_restricted: "Access has been restricted."
-    must_enable_wasm: "Please enable WebAssembly to proceed."
-    apologize_please_enable_wasm: >-
-      Your browser has WebAssembly disabled via settings or an extension. It's known that some browsers (e.g. Safari with Lockdown Mode) disable WebAssembly by default.
-      We apologize for the inconvenience, but please re-enable WebAssembly to proceed.
     browser_config_or_bug: "There might be an issue with your browser configuration, or something is wrong on our side. Please attach the error details when contacting us."
     error_details: "Error details: %{error}"
     ip_blocked: "You (or your local network) have been blocked due to suspicious activity."

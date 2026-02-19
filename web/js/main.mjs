@@ -1,6 +1,6 @@
 // This file contains code adapted from https://github.com/TecharoHQ/anubis under the MIT License.
 
-import pow from "./pow.mjs";
+import pow, { supportsWasm } from "./pow.mjs";
 import Messages from "@messageformat/runtime/messages"
 import msgData from "./icu/compiled.mjs"
 import mascotPass from "../img/mascot-pass.png"
@@ -88,15 +88,9 @@ const handleError = (error) => {
   ui.title(t('error.error_occurred'));
   ui.mascotState('fail');
 
-  if (error.message && error.message.includes("Failed to initialize WebAssembly module")) {
-    ui.message(t('error.must_enable_wasm'));
-    ui.description(t('error.apologize_please_enable_wasm'));
-    console.error(error);
-  } else {
-    ui.message(t('error.client_error'));
-    ui.description(t('error.browser_config_or_bug'));
-    ui.code(t('error.error_details', { error: error.message }));
-  }
+  ui.message(t('error.client_error'));
+  ui.description(t('error.browser_config_or_bug'));
+  ui.code(t('error.error_details', { error: error.message }));
 }
 
 const main = async () => {
@@ -116,6 +110,8 @@ const main = async () => {
   ui.metrics(t('challenge.difficulty_speed', { difficulty, speed: 0 }));
   ui.progressMessage('');
   ui.progress(0);
+
+  if (!supportsWasm()) ui.message(t('challenge.wasm_unavailable'));
 
   const t0 = Date.now();
   let lastUpdate = 0;
@@ -143,7 +139,7 @@ const main = async () => {
       const speed = totalIters / delta;
       ui.progress(distance);
       ui.metrics(t('challenge.difficulty_speed', { difficulty, speed: speed.toFixed(3) }));
-      ui.progressMessage(probability < 0.01 ? t('challenge.taking_longer') : undefined);
+      ui.progressMessage(probability < 0.01 ? t('challenge.taking_longer') : noWasm ? t('challenge.wasm_unavailable') : undefined);
       lastUpdate = delta;
     };
   });
