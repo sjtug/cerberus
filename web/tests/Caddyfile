@@ -46,5 +46,6 @@ https://localhost:9693 {
 
 	respond /*foo "Hello, foo!"
 
-	respond /*foo.iso "Hello, foo.iso!"
+	@foo_iso path */foo.iso
+	respond @foo_iso "Hello, foo.iso!"
 }
