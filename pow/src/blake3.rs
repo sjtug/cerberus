@@ -189,7 +189,8 @@ mod tests {
 
     use super::*;
 
-    #[test]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+    #[cfg_attr(not(target_arch = "wasm32"), test)]
     fn test_compress_unchained() {
         for blockc in 1..=4 {
             let mut chaining_value = IV;

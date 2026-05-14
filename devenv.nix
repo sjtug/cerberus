@@ -122,6 +122,32 @@
           "go:codegen"
         ];
       };
+      "test:go" = {
+        exec = "go test ./...";
+        after = [
+          "dist:build"
+        ];
+      };
+      "test:rust" = {
+        exec = ''
+          cd pow
+          PATH="${rust-toolchain}/bin:${pkgs.nodejs}/bin:$PATH" \
+            RUSTFLAGS="-Ctarget-cpu=mvp -Ctarget-feature=+simd128" \
+            ${wasm-pack} test --node
+        '';
+        after = [
+          "js:install"
+        ];
+      };
+      "test:playwright" = {
+        exec = ''
+          cd web
+          ${pnpm} exec playwright test
+        '';
+        after = [
+          "dist:build"
+        ];
+      };
     };
 
   # tasks = {
@@ -152,19 +178,6 @@
   enterShell = ''
     validate-playwright
   '';
-
-  # https://devenv.sh/tests/
-  enterTest =
-    let
-      pnpm = "${pkgs.nodePackages.pnpm}/bin/pnpm";
-    in
-    ''
-      echo "Running Go tests"
-      go test ./...
-
-      echo "Running Playwright tests"
-      cd web && ${pnpm} exec playwright test
-    '';
 
   # https://devenv.sh/git-hooks/
   # git-hooks.hooks.shellcheck.enable = true;

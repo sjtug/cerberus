@@ -79,7 +79,8 @@ impl crate::solver::Solver for CerberusSolver {
 mod tests {
     use super::*;
 
-    #[test]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+    #[cfg_attr(not(target_arch = "wasm32"), test)]
     fn test_solve_cerberus() {
         crate::solver::tests::test_cerberus_validator::<CerberusSolver, _>(|prefix| {
             CerberusMessage::new(prefix, 0).map(Into::into)
