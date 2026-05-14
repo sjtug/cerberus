@@ -150,12 +150,13 @@ func (e *Endpoint) answerHandle(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	http.SetCookie(w, &http.Cookie{
+	http.SetCookie(w, &http.Cookie{ // #nosec G124 -- Secure is intentionally omitted because HTTP deployments are supported.
 		Name:     c.CookieName,
 		Value:    tokenStr,
 		Expires:  time.Now().Add(c.ApprovalTTL),
-		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	e.logger.Debug("user passed the challenge")
