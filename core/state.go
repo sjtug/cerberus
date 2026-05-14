@@ -30,12 +30,12 @@ func hashIPBlock(ip ipblock.IPBlock) uint32 {
 	binary.BigEndian.PutUint64(buf[:], data)
 
 	hash := xxh3.Hash(buf[:])
-	return uint32(hash) // #nosec G115 -- expected truncation
+	return uint32(hash & 0xffffffff)
 }
 
 func hashUUID(id uuid.UUID) uint32 {
 	hash := xxh3.Hash(id[:])
-	return uint32(hash) // #nosec G115 -- expected truncation
+	return uint32(hash & 0xffffffff)
 }
 
 type InstanceState struct {
