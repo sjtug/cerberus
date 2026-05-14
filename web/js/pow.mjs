@@ -63,6 +63,8 @@ export default async function process(
         workers.length = 0;
         fallbackCallback?.(error);
       }
+    } else {
+      fallbackCallback?.(new Error("WebAssembly is unavailable"));
     }
 
     return await runWorkers(PowJsWorker, {});
