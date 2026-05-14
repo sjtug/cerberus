@@ -35,24 +35,24 @@
     "isEntry": true
   },
   "js/main.mjs": {
-    "file": "assets/main-CEkldfju.js",
+    "file": "assets/main-Dkq8qxF8.js",
     "name": "main",
     "src": "js/main.mjs",
     "isEntry": true,
     "assets": [
-      "assets/pow_mvp_bg-r222RQGn.wasm",
-      "assets/pow_simd_bg-B3oYs4Jf.wasm",
+      "assets/pow_mvp_bg-C0T3eC-h.wasm",
+      "assets/pow_simd_bg-CCgaIzFi.wasm",
       "assets/mascot-pass-B3FQ9yeD.png",
       "assets/mascot-fail-C1z397QQ.png",
       "assets/mascot-puzzle-DoXY0cHK.png"
     ]
   },
   "node_modules/.pnpm/pow-wasm-mvp@file+..+pow+pkg-mvp/node_modules/pow-wasm-mvp/pow_mvp_bg.wasm": {
-    "file": "assets/pow_mvp_bg-r222RQGn.wasm",
+    "file": "assets/pow_mvp_bg-C0T3eC-h.wasm",
     "src": "node_modules/.pnpm/pow-wasm-mvp@file+..+pow+pkg-mvp/node_modules/pow-wasm-mvp/pow_mvp_bg.wasm"
   },
   "node_modules/.pnpm/pow-wasm-simd@file+..+pow+pkg-simd/node_modules/pow-wasm-simd/pow_simd_bg.wasm": {
-    "file": "assets/pow_simd_bg-B3oYs4Jf.wasm",
+    "file": "assets/pow_simd_bg-CCgaIzFi.wasm",
     "src": "node_modules/.pnpm/pow-wasm-simd@file+..+pow+pkg-simd/node_modules/pow-wasm-simd/pow_simd_bg.wasm"
   }
 }

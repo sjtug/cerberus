@@ -1,59 +1,77 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
-test.beforeEach(async ({ page }, { tags }) => {
+const waitForAnswer = (page: Page, status: number) => page.waitForResponse(
+  (response) =>
+    response.url().endsWith('/.cerberus/answer') &&
+    response.request().method() === 'POST' &&
+    response.status() === status,
+  { timeout: 60000 },
+);
+
+test.beforeEach(async ({ page }) => {
   page.on('pageerror', (error) => {
     console.error(error);
   });
-  if (tags.includes('@nojs')) {
-    await page.goto('/nojs/foo.iso');
-  } else if (tags.includes('@nowasm')) {
-    await page.goto('/nowasm/foo.iso');
-  } else if (tags.includes('@nocerberus')) {
-    await page.goto('/foo');
-  } else {
-    await page.goto('/foo.iso');
-  }
 });
 
-test.describe('javascript disabled', { tag: '@nojs' }, () => {
+test.describe('javascript disabled', () => {
   test('must show a javascript disabled message', async ({ page }) => {
+    await page.goto('/nojs/foo.iso');
+
     await expect(page.getByText('You must enable JavaScript to proceed.')).toBeVisible();
   });
 });
 
-test.describe('webassembly disabled', { tag: '@nowasm' }, () => {
+test.describe('webassembly disabled', () => {
   test('must show a webassembly disabled message', async ({ page }) => {
+    await page.goto('/nowasm/foo.iso');
+
     await expect(page.getByText('Please enable WebAssembly to proceed.')).toBeVisible();
   });
 });
 
-test.describe('cerberus disabled', { tag: '@nocerberus' }, () => {
+test.describe('cerberus disabled', () => {
   test('must show real content immediately', async ({ page }) => {
-    await expect(page.getByText('Hello, foo!')).toBeVisible({ timeout: 100 });
+    const response = await page.goto('/foo');
+
+    expect(response?.headers()['x-cerberus-status']).toBe('DISABLED');
+    await expect(page.getByText('Hello, foo!')).toBeVisible();
   });
 });
 
 test.describe(() => {
+  test.setTimeout(60000);
+
   // NOTE This test runs slowly in Firefox due to Playwright's devtools integration causing WebAssembly performance degradation
   // NOTE See: https://github.com/microsoft/playwright/issues/11102
   test('must perform browser checks', async ({ page }) => {
-    await expect(page.getByText('Performing browser checks...')).toBeVisible();
-    await expect(page.getByText('Difficulty:')).toHaveText(/Difficulty: \d+, Speed: \d+(\.\d+)?kH\/s/, { timeout: 500 });
+    const answerResponse = waitForAnswer(page, 303);
 
-    await expect(page.getByText('Hello, foo.iso!')).toBeVisible({ timeout: 30000 });
+    const response = await page.goto('/foo.iso', { waitUntil: 'commit' });
+
+    expect(response?.headers()['x-cerberus-status']).toBe('CHALLENGE');
+    await expect(page.getByText('Performing browser checks...')).toBeVisible();
+    await expect(page.getByText('Difficulty:')).toHaveText(/Difficulty: \d+, Speed: \d+(\.\d+)?kH\/s/);
+
+    await answerResponse;
+    await expect(page.getByText('Hello, foo.iso!')).toBeVisible();
   });
 
-  test("must fail when response is incorrect", async ({page}) => {
-    page.route("/.cerberus/answer", async (route, req) => {
-      const formData = await req.postDataJSON() as { response: string, solution: string, nonce: string, ts: string, signature: string };
-      formData.response = "1145141919810";
+  test('must fail when response is incorrect', async ({ page }) => {
+    await page.route('**/.cerberus/answer', async (route, request) => {
+      const formData = new URLSearchParams(request.postData() ?? '');
+      formData.set('response', '1145141919810');
+
       await route.continue({
-        postData: Object.entries(formData)
-          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
-          .join('&')
+        postData: formData.toString(),
       });
     });
 
-    await expect(page.getByText('Server returned an error that we cannot handle.')).toBeVisible({ timeout: 30000 });
-  })
+    const answerResponse = waitForAnswer(page, 403);
+
+    await page.goto('/foo.iso');
+
+    await answerResponse;
+    await expect(page.getByText('Server returned an error that we cannot handle.')).toBeVisible();
+  });
 });
