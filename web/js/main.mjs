@@ -77,7 +77,7 @@ function createAnswerForm(hash, solution, baseURL, nonce, ts, signature) {
   addHiddenInput(form, 'nonce', nonce);
   addHiddenInput(form, 'ts', ts);
   addHiddenInput(form, 'signature', signature);
-  addHiddenInput(form, 'redir', window.location.href);
+  addHiddenInput(form, 'redir', window.location.pathname + window.location.search + window.location.hash);
 
   document.body.appendChild(form);
   return form;
