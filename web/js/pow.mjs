@@ -9,8 +9,9 @@ const simdProbeModule = new Uint8Array([
   0, 0, 0, 0, 0, 0, 0, 0, 11,
 ]);
 
-export const supportsWasm = () => {
-  return WebAssembly && [WebAssembly.validate, WebAssembly.instantiate].every(i => typeof i == "function");
+const supportsWasm = () => {
+  return typeof WebAssembly !== "undefined" &&
+    [WebAssembly.validate, WebAssembly.instantiate].every(i => typeof i == "function");
 };
 
 const supportsSimd = () => {
@@ -27,29 +28,17 @@ export default async function process(
   difficulty = 5,
   signal = null,
   progressCallback = null,
+  fallbackCallback = null,
   threads = (navigator.hardwareConcurrency || 1),
 ) {
   const workers = [];
-  try {
-    const useWasm = supportsWasm();
-    let wasmModule = null;
-    let WorkerClass;
-
-    if (useWasm) {
-      const hasSimd = supportsSimd();
-      const wasmUrl = hasSimd ? wasmUrlSimd : wasmUrlMvp;
-      wasmModule = await (await fetch(wasmUrl)).arrayBuffer();
-      WorkerClass = PowWorker;
-    } else {
-      WorkerClass = PowJsWorker;
-    }
-
-    return await Promise.race(Array(threads).fill(0).map((i, idx) => new Promise((resolve, reject) => {
+  const runWorkers = (WorkerClass, message) => Promise.race(
+    Array(threads).fill(0).map((i, idx) => new Promise((resolve, reject) => {
       const worker = new WorkerClass();
       worker.onmessage = ({ data }) => (typeof data === "number" ? progressCallback : resolve)?.(data);
       worker.onerror = reject;
       worker.postMessage({
-        ...(useWasm ? { wasmModule } : {}),
+        ...message,
         data,
         difficulty,
         nonce: idx,
@@ -57,7 +46,26 @@ export default async function process(
       });
       signal?.addEventListener("abort", () => reject(new Error("PoW aborted")), { once: true });
       workers.push(worker);
-    })));
+    }))
+  );
+
+  try {
+    const useWasm = supportsWasm();
+
+    if (useWasm) {
+      try {
+        const hasSimd = supportsSimd();
+        const wasmUrl = hasSimd ? wasmUrlSimd : wasmUrlMvp;
+        const wasmModule = await (await fetch(wasmUrl)).arrayBuffer();
+        return await runWorkers(PowWorker, { wasmModule });
+      } catch (error) {
+        workers.forEach((w) => w.terminate());
+        workers.length = 0;
+        fallbackCallback?.(error);
+      }
+    }
+
+    return await runWorkers(PowJsWorker, {});
   } finally {
     workers.forEach((w) => w.terminate());
   }
