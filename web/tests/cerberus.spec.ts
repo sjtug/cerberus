@@ -23,10 +23,16 @@ test.describe('javascript disabled', () => {
 });
 
 test.describe('webassembly disabled', () => {
-  test('must show a webassembly disabled message', async ({ page }) => {
-    await page.goto('/nowasm/foo.iso');
+  test.setTimeout(60000);
+  test('must show a webassembly fallback warning', async ({ page }) => {
+    const answerResponse = waitForAnswer(page, 303);
 
-    await expect(page.getByText('Please enable WebAssembly to proceed.')).toBeVisible();
+    await page.goto('/nowasm/foo.iso', { waitUntil: 'commit' });
+
+    await expect(page.getByText('Your browser does not support WebAssembly. Computation may be slower.')).toBeVisible();
+
+    await answerResponse;
+    await expect(page.getByText('Hello, foo.iso!')).toBeVisible();
   });
 });
 

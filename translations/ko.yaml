@@ -4,6 +4,7 @@ ko:
     calculating: "브라우저 확인 중..."
     difficulty_speed: "난이도: %{difficulty}, 속도: %{speed}kH/s"
     taking_longer: "예상보다 시간이 오래 걸리고 있습니다. 페이지를 새로 고침하지 마세요."
+    wasm_unavailable: "브라우저가 WebAssembly를 지원하지 않습니다. 연산 속도가 느려질 수 있습니다."
     why_seeing: "이 페이지가 표시되는 이유는 무엇인가요?"
     why_seeing_body:
       part_1: >-
@@ -21,10 +22,6 @@ ko:
     server_error: "서버에서 처리할 수 없는 오류를 반환했습니다."
     client_error: "검증 중 예상치 못한 오류가 발생했습니다."
     access_restricted: "접근이 제한되었습니다."
-    must_enable_wasm: "계속하려면 WebAssembly를 활성화해 주세요."
-    apologize_please_enable_wasm: >-
-      브라우저 설정이나 확장 프로그램으로 인해 WebAssembly가 비활성화되어 있습니다. 일부 브라우저(예: 잠금 모드를 사용하는 Safari)는 기본적으로 WebAssembly를 비활성화하는 것으로 알려져 있습니다.
-      불편을 드려 죄송하지만, 계속하려면 WebAssembly를 다시 활성화해 주십시오.
     browser_config_or_bug: "브라우저 구성 문제이거나 서버 측의 문제일 수 있습니다. 문의 시 오류 세부 정보를 첨부해 주세요."
     error_details: "오류 세부 정보: %{error}"
     ip_blocked: "의심스러운 활동으로 인해 귀하(또는 귀하의 로컬 네트워크)가 차단되었습니다."

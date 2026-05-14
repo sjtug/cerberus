@@ -88,15 +88,9 @@ const handleError = (error) => {
   ui.title(t('error.error_occurred'));
   ui.mascotState('fail');
 
-  if (error.message && error.message.includes("Failed to initialize WebAssembly module")) {
-    ui.message(t('error.must_enable_wasm'));
-    ui.description(t('error.apologize_please_enable_wasm'));
-    console.error(error);
-  } else {
-    ui.message(t('error.client_error'));
-    ui.description(t('error.browser_config_or_bug'));
-    ui.code(t('error.error_details', { error: error.message }));
-  }
+  ui.message(t('error.client_error'));
+  ui.description(t('error.browser_config_or_bug'));
+  ui.code(t('error.error_details', { error: error.message }));
 }
 
 const main = async () => {
@@ -143,9 +137,13 @@ const main = async () => {
       const speed = totalIters / delta;
       ui.progress(distance);
       ui.metrics(t('challenge.difficulty_speed', { difficulty, speed: speed.toFixed(3) }));
-      ui.progressMessage(probability < 0.01 ? t('challenge.taking_longer') : undefined);
+      if (probability < 0.01) {
+        ui.progressMessage(t('challenge.taking_longer'));
+      }
       lastUpdate = delta;
     };
+  }, () => {
+    ui.progressMessage(t('challenge.wasm_unavailable'));
   });
   const t1 = Date.now();
 

@@ -5,6 +5,7 @@ zh:
     calculating: "正在进行浏览器检查..."
     difficulty_speed: "难度：%{difficulty}，速度：%{speed}kH/s"
     taking_longer: "验证时间超出预期，请勿刷新页面"
+    wasm_unavailable: "您的浏览器不支持 WebAssembly，运算速度可能变慢"
     why_seeing: "为什么我会看到这个页面？"
     why_seeing_body:
       part_1: >-
@@ -22,10 +23,6 @@ zh:
     server_error: "服务器返回了未知错误"
     client_error: "验证过程中发生了意外错误"
     access_restricted: "访问受限"
-    must_enable_wasm: "请启用 WebAssembly 以继续访问"
-    apologize_please_enable_wasm: >-
-      您的浏览器关闭了 WebAssembly，这可能是由于设置或插件导致的。已知部分浏览器（如 Safari 的锁定模式）会默认禁用 WebAssembly。
-      您需要重新启用 JavaScript 才能继续访问，抱歉给您带来不便。
     browser_config_or_bug: "这可能是浏览器配置问题造成的，或是我们的系统出现了异常。联系我们时烦请您附上错误详情。"
     error_details: "错误详情：%{error}"
     ip_blocked: "由于检测到可疑活动，您的 IP 地址或本地网络已被封禁"
