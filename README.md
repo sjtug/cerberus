@@ -66,18 +66,18 @@ This will surely slow down legitimate users, but we believe that this is a neces
 
 You need to first generate necessary go files before developing:
 ```bash
-$ devenv tasks run go:codegen --mode before
+$ devenv tasks run go:codegen
 ```
 
 If you modified any web asset, you need to run the following command to build the dist files:
 ```bash
-$ devenv tasks run dist:build --mode before
+$ devenv tasks run dist:build
 ```
 
 Please run tests and lints before submitting a PR:
 ```bash
 $ direnv test # or go test
-$ devenv tasks run go:lint --mode before
+$ devenv tasks run go:lint
 ```
 
 ## Build Pipeline

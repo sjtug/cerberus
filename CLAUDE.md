@@ -11,13 +11,13 @@ Cerberus is a Caddy plugin that protects open source infrastructure using sha256
 ### Code Generation
 Before developing, generate necessary Go files:
 ```bash
-devenv tasks run go:codegen --mode before
+devenv tasks run go:codegen
 ```
 
 ### Building Web Assets
 After modifying web assets:
 ```bash
-devenv tasks run dist:build --mode before
+devenv tasks run dist:build
 ```
 
 ### Testing
@@ -36,7 +36,7 @@ cd web && pnpm exec playwright test --project=chromium
 
 ### Linting
 ```bash
-devenv tasks run go:lint --mode before
+devenv tasks run go:lint
 ```
 
 ### Testing Requirements
