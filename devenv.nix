@@ -122,6 +122,32 @@
           "go:codegen"
         ];
       };
+      "test:go" = {
+        exec = "go test ./...";
+        after = [
+          "dist:build"
+        ];
+      };
+      "test:rust" = {
+        exec = ''
+          cd pow
+          PATH="${rust-toolchain}/bin:${pkgs.nodejs}/bin:$PATH" \
+            RUSTFLAGS="-Ctarget-cpu=mvp -Ctarget-feature=+simd128" \
+            ${wasm-pack} test --node
+        '';
+        after = [
+          "js:install"
+        ];
+      };
+      "test:playwright" = {
+        exec = ''
+          cd web
+          ${pnpm} exec playwright test
+        '';
+        after = [
+          "dist:build"
+        ];
+      };
     };
 
   # tasks = {
@@ -152,37 +178,6 @@
   enterShell = ''
     validate-playwright
   '';
-
-  # https://devenv.sh/tests/
-  enterTest =
-    let
-      pnpm = "${pkgs.nodePackages.pnpm}/bin/pnpm";
-      wasm-pack = "${pkgs.wasm-pack}/bin/wasm-pack";
-      rust-toolchain = pkgs.rust-bin.selectLatestNightlyWith (
-        toolchain:
-        toolchain.minimal.override {
-          extensions = [ "rust-src" ];
-          targets = [ "wasm32-unknown-unknown" ];
-        }
-      );
-    in
-    ''
-      echo "Running Go tests"
-      go test ./...
-
-      echo "Running native Rust PoW tests"
-      cd pow
-      PATH="${rust-toolchain}/bin:$PATH" cargo test
-
-      echo "Running wasm SIMD Rust PoW tests"
-      PATH="${rust-toolchain}/bin:${pkgs.nodejs}/bin:$PATH" \
-        RUSTFLAGS="-Ctarget-cpu=mvp -Ctarget-feature=+simd128" \
-        ${wasm-pack} test --node
-      cd ..
-
-      echo "Running Playwright tests"
-      cd web && ${pnpm} exec playwright test
-    '';
 
   # https://devenv.sh/git-hooks/
   # git-hooks.hooks.shellcheck.enable = true;
