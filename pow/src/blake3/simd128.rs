@@ -103,7 +103,8 @@ mod tests {
         state[b] = (state[b] ^ state[c]).rotate_right(7);
     }
 
-    #[test]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+    #[cfg_attr(not(target_arch = "wasm32"), test)]
     fn test_g_function() {
         let mut state = core::array::from_fn(|i| crate::blake3::IV[i % 8].wrapping_add(i as u32));
         let mut state_v: [_; 16] = core::array::from_fn(|i| unsafe { u32x4_splat(state[i] as _) });
@@ -138,7 +139,8 @@ mod tests {
         }
     }
 
-    #[test]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+    #[cfg_attr(not(target_arch = "wasm32"), test)]
     fn test_compress_mb4() {
         let mut v = [0u32; 16];
         v[..8].copy_from_slice(&crate::blake3::IV);
