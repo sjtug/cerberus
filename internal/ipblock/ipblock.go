@@ -77,7 +77,7 @@ func (b IPBlock) ToIPNet(cfg Config) *net.IPNet {
 
 	ip := make(net.IP, 16)
 	for i := range 8 {
-		ip[7-i] = byte(b.data >> (8 * i))
+		ip[7-i] = byte((b.data >> (8 * i)) & 0xff)
 	}
 	return &net.IPNet{
 		IP:   ip,
