@@ -27,11 +27,13 @@ const (
 )
 
 func clearCookie(w http.ResponseWriter, cookieName string) {
-	http.SetCookie(w, &http.Cookie{
+	http.SetCookie(w, &http.Cookie{ // #nosec G124 -- Secure is intentionally omitted because HTTP deployments are supported.
 		Name:     cookieName,
 		Value:    "",
 		Expires:  time.Now().Add(-time.Hour),
 		MaxAge:   -1,
+		Path:     "/",
+		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	})
 }

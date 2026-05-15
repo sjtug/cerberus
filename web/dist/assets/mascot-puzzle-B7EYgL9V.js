@@ -1,0 +1,1 @@
+var e=``+new URL(`mascot-pass-B3FQ9yeD.png`,import.meta.url).href,t=``+new URL(`mascot-fail-C1z397QQ.png`,import.meta.url).href,n=``+new URL(`mascot-puzzle-DoXY0cHK.png`,import.meta.url).href;export{t as n,e as r,n as t};

@@ -12,17 +12,17 @@
     "@messageformat/convert": "^1.0.0",
     "@messageformat/core": "^3.4.0",
     "@messageformat/runtime": "^3.0.2",
-    "glob": "^11.1.0",
+    "glob": "^13.0.6",
     "pow-wasm-mvp": "file:../pow/pkg-mvp",
     "pow-wasm-simd": "file:../pow/pkg-simd",
-    "tailwindcss": "^4.1.18",
-    "yaml": "^2.8.2"
+    "tailwindcss": "^4.3.0",
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
-    "@playwright/test": "~1.57.0",
-    "@tailwindcss/vite": "^4.1.18",
-    "@types/node": "^24.10.11",
-    "vite": "^6.4.1",
+    "@playwright/test": "~1.59.1",
+    "@tailwindcss/vite": "^4.3.0",
+    "@types/node": "^24.12.4",
+    "vite": "^8.0.12",
     "vite-plugin-imagemin": "^0.6.1"
   }
 }

@@ -28,7 +28,7 @@ type ExpireMap[K comparable, V any] struct {
 // fastModulo calculates x % n without using the modulo operator (~4x faster).
 // Reference: https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
 func fastModulo(x, n uint32) uint32 {
-	return uint32((uint64(x) * uint64(n)) >> 32) //nolint:gosec
+	return uint32((uint64(x) * uint64(n)) >> 32)
 }
 
 func NewExpireMap[K comparable, V any](hash func(K) uint32) *ExpireMap[K, V] {

@@ -6,6 +6,6 @@ const (
 	AppName    = "cerberus"
 	VarIPBlock = "cerberus-block"
 	VarReqID   = "cerberus-request-id"
-	Version    = "v0.4.7"
+	Version    = "v0.4.8"
 	NonceTTL   = 2 * time.Minute
 )

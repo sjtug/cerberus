@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -38,6 +39,29 @@ func checkAnswer(s string, difficulty int) bool {
 	}
 
 	return s[nibbles] < '8'
+}
+
+func normalizeRedirect(redir string) (string, error) {
+	redir = strings.ReplaceAll(redir, "\\", "/")
+	u, err := url.Parse(redir)
+	if err != nil {
+		return "", fmt.Errorf("invalid redirect URL: %w", err)
+	}
+	u.Path = strings.ReplaceAll(u.Path, "\\", "/")
+	u.RawPath = ""
+
+	if u.IsAbs() || u.Host != "" || !strings.HasPrefix(u.Path, "/") || strings.HasPrefix(u.Path, "//") {
+		return "", fmt.Errorf("redirect URL must be a local path")
+	}
+
+	target := u.RequestURI()
+	if target == "" {
+		target = "/"
+	}
+	if u.Fragment != "" {
+		target += "#" + u.EscapedFragment()
+	}
+	return target, nil
 }
 
 func (e *Endpoint) answerHandle(w http.ResponseWriter, r *http.Request) error {
@@ -150,12 +174,13 @@ func (e *Endpoint) answerHandle(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	http.SetCookie(w, &http.Cookie{
+	http.SetCookie(w, &http.Cookie{ // #nosec G124 -- Secure is intentionally omitted because HTTP deployments are supported.
 		Name:     c.CookieName,
 		Value:    tokenStr,
 		Expires:  time.Now().Add(c.ApprovalTTL),
-		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	e.logger.Debug("user passed the challenge")
@@ -166,8 +191,14 @@ func (e *Endpoint) answerHandle(w http.ResponseWriter, r *http.Request) error {
 		c.DecPending(ipBlock)
 	}
 
+	redir, err = normalizeRedirect(redir)
+	if err != nil {
+		e.logger.Debug("invalid redirect URL", zap.String("redir", redir), zap.Error(err))
+		return respondFailure(w, r, &c.Config, "invalid redirect URL", false, http.StatusBadRequest, ".")
+	}
+
 	w.Header().Set(c.HeaderName, "PASS")
-	http.Redirect(w, r, redir, http.StatusSeeOther)
+	http.Redirect(w, r, redir, http.StatusSeeOther) // #nosec G710 -- redir is normalized to a path-only redirect target.
 	return nil
 }
 

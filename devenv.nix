@@ -9,7 +9,6 @@
   packages = with pkgs; [
     git
     xcaddy
-    templ
     golangci-lint
     wasm-pack
     wabt
@@ -32,9 +31,10 @@
 
   tasks =
     let
-      templ = "${pkgs.templ}/bin/templ";
+      # NOTE we temporarily use `go tool templ` before nixpkgs updates go-templ to v0.3.1020
+      templ = "go tool templ";
       wasm-pack = "${pkgs.wasm-pack}/bin/wasm-pack";
-      pnpm = "${pkgs.nodePackages.pnpm}/bin/pnpm";
+      pnpm = "${pkgs.pnpm}/bin/pnpm";
       golangci-lint = "${pkgs.golangci-lint}/bin/golangci-lint";
       wasm-validate = "${pkgs.wabt}/bin/wasm-validate";
       node = "${pkgs.nodejs}/bin/node";
@@ -51,7 +51,7 @@
     {
       "wasm:build-mvp".exec = ''
         PATH="${rust-toolchain}/bin:$PATH" \
-        RUSTFLAGS="-Ctarget-cpu=mvp" \
+        CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="-Ctarget-cpu=mvp" \
         ${wasm-pack} build --target web -d pkg-mvp --out-name pow_mvp ./pow --no-default-features -Z build-std=panic_abort,std
 
         ${wasm-validate} ./pow/pkg-mvp/pow_mvp_bg.wasm \
@@ -68,7 +68,7 @@
 
       "wasm:build-simd".exec = ''
         PATH="${rust-toolchain}/bin:$PATH" \
-        RUSTFLAGS="-Ctarget-cpu=mvp -Ctarget-feature=+simd128" \
+        CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="-Ctarget-cpu=mvp -Ctarget-feature=+simd128" \
         ${wasm-pack} build --target web -d pkg-simd --out-name pow_simd ./pow --no-default-features -Z build-std=panic_abort,std
 
         ${wasm-validate} ./pow/pkg-simd/pow_simd_bg.wasm \
@@ -132,7 +132,6 @@
         exec = ''
           cd pow
           PATH="${rust-toolchain}/bin:${pkgs.nodejs}/bin:$PATH" \
-            RUSTFLAGS="-Ctarget-cpu=mvp -Ctarget-feature=+simd128" \
             ${wasm-pack} test --node
         '';
         after = [
@@ -158,10 +157,15 @@
   # https://devenv.sh/scripts/
   scripts.validate-playwright.exec =
     let
-      pnpm = "${pkgs.nodePackages.pnpm}/bin/pnpm";
+      pnpm = "${pkgs.pnpm}/bin/pnpm";
+      jq = "${pkgs.jq}/bin/jq";
     in
     ''
-      playwrightNpmVersion="$(cd web && ${pnpm} list @playwright/test | grep @playwright/test | awk '{print $2}')"
+      playwrightNpmVersion="$(
+        cd web
+        ${pnpm} list @playwright/test --depth 0 --json \
+          | ${jq} -r '.[0].devDependencies["@playwright/test"].version'
+      )"
       echo "❄️ Playwright nix version: ${pkgs.playwright-test.version}"
       echo "📦 Playwright npm version: $playwrightNpmVersion"
 
