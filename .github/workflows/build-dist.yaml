@@ -62,8 +62,12 @@ jobs:
           else
             # If it doesn't exist, create a new one
             git checkout --orphan dist
-            git rm -rf .
           fi
+
+          # Reset tracked contents before copying from master. Without this,
+          # files that only exist on dist, such as previously committed
+          # node_modules, survive and can break the next build.
+          git rm -rf --ignore-unmatch .
 
           # Copy content from current ref
           git checkout $COMMIT_SHA -- .

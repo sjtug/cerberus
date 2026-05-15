@@ -39,3 +39,4 @@ go.work.sum
 caddy
 
 .parcel-cache
+node_modules/
