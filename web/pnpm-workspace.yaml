@@ -1,17 +1,4 @@
 allowBuilds:
-  cwebp-bin: true
+  '@tailwindcss/oxide': true
   esbuild: true
-  gifsicle: true
-  jpegtran-bin: true
-  mozjpeg: true
-  optipng-bin: true
-  pngquant-bin: true
-onlyBuiltDependencies:
-  - '@tailwindcss/oxide'
-  - cwebp-bin
-  - esbuild
-  - gifsicle
-  - jpegtran-bin
-  - mozjpeg
-  - optipng-bin
-  - pngquant-bin
+  sharp: true
