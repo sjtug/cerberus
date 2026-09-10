@@ -1,15 +1,6 @@
 {
-  "_mascot-puzzle-B7EYgL9V.js": {
-    "file": "assets/mascot-puzzle-B7EYgL9V.js",
-    "name": "mascot-puzzle",
-    "assets": [
-      "assets/mascot-pass-B3FQ9yeD.png",
-      "assets/mascot-fail-C1z397QQ.png",
-      "assets/mascot-puzzle-DoXY0cHK.png"
-    ]
-  },
   "global.css": {
-    "file": "assets/global-D6pk6-XR.css",
+    "file": "assets/global-CNwiPAea.css",
     "name": "global",
     "names": [
       "global.css"
@@ -30,30 +21,30 @@
     "src": "img/mascot-puzzle.png"
   },
   "js/assets.mjs": {
-    "file": "assets/assets-CxGt95CA.js",
+    "file": "assets/assets-BvRk9kiK.js",
     "name": "assets",
     "src": "js/assets.mjs",
     "isEntry": true
   },
   "js/main.mjs": {
-    "file": "assets/main-D32P3afb.js",
+    "file": "assets/main-CAZO6Tvf.js",
     "name": "main",
     "src": "js/main.mjs",
     "isEntry": true,
-    "imports": [
-      "_mascot-puzzle-B7EYgL9V.js"
-    ],
     "assets": [
-      "assets/pow_mvp_bg-77RM5TOj.wasm",
-      "assets/pow_simd_bg-CnGH2FPU.wasm"
+      "assets/pow_mvp_bg-Ud8CbIZx.wasm",
+      "assets/pow_simd_bg-CeHu0d0i.wasm",
+      "assets/mascot-pass-B3FQ9yeD.png",
+      "assets/mascot-fail-C1z397QQ.png",
+      "assets/mascot-puzzle-DoXY0cHK.png"
     ]
   },
   "node_modules/.pnpm/pow-wasm-mvp@file+..+pow+pkg-mvp/node_modules/pow-wasm-mvp/pow_mvp_bg.wasm": {
-    "file": "assets/pow_mvp_bg-77RM5TOj.wasm",
+    "file": "assets/pow_mvp_bg-Ud8CbIZx.wasm",
     "src": "node_modules/.pnpm/pow-wasm-mvp@file+..+pow+pkg-mvp/node_modules/pow-wasm-mvp/pow_mvp_bg.wasm"
   },
   "node_modules/.pnpm/pow-wasm-simd@file+..+pow+pkg-simd/node_modules/pow-wasm-simd/pow_simd_bg.wasm": {
-    "file": "assets/pow_simd_bg-CnGH2FPU.wasm",
+    "file": "assets/pow_simd_bg-CeHu0d0i.wasm",
     "src": "node_modules/.pnpm/pow-wasm-simd@file+..+pow+pkg-simd/node_modules/pow-wasm-simd/pow_simd_bg.wasm"
   }
 }

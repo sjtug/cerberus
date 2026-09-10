@@ -15,7 +15,6 @@ const supportsWasm = () => {
 };
 
 const supportsSimd = () => {
-  if (!supportsWasm()) return false;
   try {
     return WebAssembly.validate(simdProbeModule);
   } catch {
@@ -57,7 +56,7 @@ export default async function process(
         const hasSimd = supportsSimd();
         const wasmUrl = hasSimd ? wasmUrlSimd : wasmUrlMvp;
         const wasmModule = await (await fetch(wasmUrl)).arrayBuffer();
-        return await runWorkers(PowWorker, { wasmModule });
+        return await runWorkers(PowWorker, { wasmModule, hasSimd });
       } catch (error) {
         workers.forEach((w) => w.terminate());
         workers.length = 0;
