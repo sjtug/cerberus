@@ -1,4 +1,4 @@
-{ inputs, pkgs, ... }:
+{ config, inputs, pkgs, ... }:
 
 {
   overlays = [
@@ -20,7 +20,7 @@
   env = {
     PLAYWRIGHT_BROWSERS_PATH = "${pkgs.playwright.passthru.browsers}";
     PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS = "true";
-    PLAYWRIGHT_NODEJS_PATH = "${pkgs.nodejs}/bin/node";
+    PLAYWRIGHT_NODEJS_PATH = "${config.languages.javascript.package}/bin/node";
   };
 
   # https://devenv.sh/languages/
@@ -28,13 +28,17 @@
     enable = true;
     enableHardeningWorkaround = true;
   };
+  languages.javascript = {
+    enable = true;
+    pnpm.enable = true;
+  };
 
   tasks =
     let
       # NOTE we temporarily use `go tool templ` before nixpkgs updates go-templ to v0.3.1020
       templ = "go tool templ";
       wasm-pack = "${pkgs.wasm-pack}/bin/wasm-pack";
-      pnpm = "${pkgs.pnpm}/bin/pnpm";
+      pnpm = "${config.languages.javascript.pnpm.package}/bin/pnpm";
       golangci-lint = "${pkgs.golangci-lint}/bin/golangci-lint";
       wasm-validate = "${pkgs.wabt}/bin/wasm-validate";
       node = "${pkgs.nodejs}/bin/node";
@@ -157,9 +161,10 @@
   # https://devenv.sh/scripts/
   scripts.validate-playwright.exec =
     let
-      pnpm = "${pkgs.pnpm}/bin/pnpm";
+      pnpm = "${config.languages.javascript.pnpm.package}/bin/pnpm";
       jq = "${pkgs.jq}/bin/jq";
     in
+    /* bash */
     ''
       playwrightNpmVersion="$(
         cd web
