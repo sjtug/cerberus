@@ -195,12 +195,16 @@ func renderTemplate(w http.ResponseWriter, r *http.Request, c *core.Config, base
 	ctx := templ.WithChildren(
 		context.WithValue(
 			context.WithValue(
-				context.WithValue(r.Context(), web.BaseURLCtxKey, baseURL),
-				web.VersionCtxKey,
-				core.Version,
+				context.WithValue(
+					context.WithValue(r.Context(), web.BaseURLCtxKey, baseURL),
+					web.VersionCtxKey,
+					core.Version,
+				),
+				web.MailCtxKey,
+				c.Mail,
 			),
-			web.MailCtxKey,
-			c.Mail,
+			web.AssetURLCtxKey,
+			c.AssetURL,
 		),
 		child,
 	)

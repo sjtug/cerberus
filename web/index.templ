@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"strings"
 
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
 	"github.com/invopop/ctxi18n/i18n"
@@ -16,6 +17,7 @@ const (
 	LocaleCtxKey
 	ManifestCtxKey
 	MailCtxKey
+	AssetURLCtxKey
 )
 
 templ T(key string, args ...any) {
@@ -50,8 +52,21 @@ func GetRequestID(ctx context.Context) string {
 	return caddyhttp.GetVar(ctx, core.VarReqID).(string)
 }
 
+func GetAssetURL(ctx context.Context) string {
+	if v, ok := ctx.Value(AssetURLCtxKey).(string); ok {
+		return v
+	}
+	return ""
+}
+
 func AssetPath(ctx context.Context, path string) string {
-	return caddyhttp.SanitizedPathJoin(GetBaseURL(ctx)+"/static", GetManifest(ctx)[path].File)
+	base := GetAssetURL(ctx)
+	file := GetManifest(ctx)[path].File
+	if base != "" {
+		// absolute (CDN) URL: simple concat, file names come from the build manifest
+		return strings.TrimSuffix(base, "/") + "/static/" + file
+	}
+	return caddyhttp.SanitizedPathJoin(GetBaseURL(ctx)+"/static", file)
 }
 
 templ Base(title string, header string) {
