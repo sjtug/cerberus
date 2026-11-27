@@ -161,6 +161,15 @@ func (c *App) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 				V4Prefix: v4Prefix,
 				V6Prefix: v6Prefix,
 			}
+		case "asset_url":
+			if !d.NextArg() {
+				return d.ArgErr()
+			}
+			assetURL, ok := d.ScalarVal().(string)
+			if !ok {
+				return d.Errf("asset_url must be a string")
+			}
+			c.AssetURL = assetURL
 		case "mail":
 			if !d.NextArg() {
 				return d.ArgErr()

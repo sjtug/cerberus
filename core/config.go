@@ -62,6 +62,9 @@ type Config struct {
 	Mail string `json:"mail,omitempty"`
 	// PrefixCfg is to configure prefixes used to block users in these IP prefix blocks, e.g., /24 /64.
 	PrefixCfg ipblock.Config `json:"prefix_cfg,omitempty"`
+	// AssetURL is the base URL used to load static assets (js/css/images), e.g., a CDN URL like "https://cdn.example.com/cerberus".
+	// Assets are referenced as "{asset_url}/static/{file}". If empty, assets are served from the challenge endpoint itself.
+	AssetURL string `json:"asset_url,omitempty"`
 
 	ed25519Key ed25519.PrivateKey
 	ed25519Pub ed25519.PublicKey
